@@ -573,9 +573,9 @@ if($_SESSION['UserRoleName'] != '0'){
                                         ?>
                                         <tr>
                                             <!-- <td><?php echo $serialNo++; ?></td> -->
-                                            <td><?php echo $row['Title']; ?></td>
-                                            <td>Dr. <?php echo $row['Name']; ?></td>
-                                            <td><?php echo $row['Description']; ?></td>
+                                            <td><?php echo htmlspecialchars(trim($row['Title'])) ?></td>
+                                            <td>Dr. <?php echo htmlspecialchars(trim($row['Name'])) ?></td>
+                                            <td><?php echo htmlspecialchars(trim($row['Description']))?></td>
 
                                             <td class="text-center"> <img
                                                     src="DataAdd/uploads/<?php echo $row["FrontImage"]; ?>" width=100

@@ -577,7 +577,7 @@ if($_SESSION['UserRoleName'] != '0'){
                                         <tr>
                                             <!-- <td><?php echo $serialNo++; ?></td> -->
 
-                                            <td><?php echo $row['CategoryName']; ?></td>
+                                            <td><?php echo htmlspecialchars(trim($row['CategoryName'])) ?></td>
                                             <td class="text-center">
                                                 <div class="d-inline-flex gap-3">
                                                     <!-- <div data-bs-toggle="tooltip" data-bs-placement="bottom"

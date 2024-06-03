@@ -496,7 +496,7 @@ include('session_out.php');
                     //     $pageOptionsSubMenu .= '</a>';
                     //     $pageOptionsSubMenu .= '</li>';
                     // }
-
+            
                     if ($row['ModuleName'] == 'Event List' || $row['ModuleName'] == 'Event Request') {
                         $eventOptionsSubMenu .= '<li>';
                         $eventOptionsSubMenu .= '<a href="events/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
@@ -579,7 +579,7 @@ include('session_out.php');
                 //     echo '</ul>';
                 //     echo '</li>';
                 // }
-
+            
                 if ($eventOptionsSubMenu !== '') {
                     echo '<li class="nav-item">';
                     echo '<a class="nav-link collapsed" data-bs-target="#event-nav" data-bs-toggle="collapse" href="#">';
@@ -743,9 +743,9 @@ include('session_out.php');
                                                         <?php
 
                                                         if ($status == 0) {
-                                                            echo 'Under maintenance';
+                                                            echo '<span class="badge bg-warning text-dark"><i class="bi bi-tools"></i> Under Maintenance</span>';
                                                         } else {
-                                                            echo 'Complete';
+                                                            echo '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Complete</span>';
                                                         }
 
 
@@ -1009,7 +1009,7 @@ include('session_out.php');
         });
     </script>
 
- 
+
     <script>
         function confirmOn(event) {
             var checkBox = event.target;

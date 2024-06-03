@@ -10,7 +10,7 @@ date_default_timezone_set('Asia/Manila');
 $data = json_decode(file_get_contents("php://input"));
 
 if ($data && isset($data->reason)) {
-    $reason = $data->reason;
+    $reason =  htmlspecialchars(trim($data->reason));
     $userID = $_SESSION['UserID'];
     $status = 0; // Assuming default status is 0
 
