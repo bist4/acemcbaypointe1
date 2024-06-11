@@ -855,65 +855,131 @@ if($_SESSION['UserRoleName'] != '0'){
 
 
     <script>
-        $(document).ready(function () {
-            //Only needed for the filename of export files.
-            //Normally set in the title tag of your page.
-            document.title = "Category Options";
-            // Create search inputs in footer
-            $("#example tfoot th").each(function (index) {
-                var title = $(this).text();
-                if (index !== 1) { // Skip the "Action" column (index 6)
-                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
-                } else {
-                    $(this).empty(); // Remove label for "Action" column
-                }
-            });
-            // DataTable initialisation
-            var table = $("#example").DataTable({
-                ordering: false,
-                dom: '<"dt-buttons"Bf><"clear">lirtp',
-                paging: true,
-                autoWidth: true,
-                buttons: [
-                    "colvis",
-                    "copyHtml5",
-                    "csvHtml5",
-                    "excelHtml5",
-                    "pdfHtml5",
-                    {
-                        extend: 'print',
-                        customize: function (win) {
-                            $(win.document.body)
-                                .css('font-size', '10pt')
-                                .prepend('<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />');
+       $(document).ready(function () {
+    //Only needed for the filename of export files.
+    //Normally set in the title tag of your page.
+    document.title = "Category Options";
+    // Create search inputs in footer
+    $("#example tfoot th").each(function (index) {
+        var title = $(this).text();
+        if (index !== 1) { // Skip the "Action" column (index 6)
+            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+        } else {
+            $(this).empty(); // Remove label for "Action" column
+        }
+    });
+    // DataTable initialisation
+    var table = $("#example").DataTable({
+        ordering: false,
+        dom: '<"dt-buttons"Bf><"clear">lirtp',
+        paging: true,
+        autoWidth: true,
+        buttons: [
+            "colvis",
+            "copyHtml5",
+            "csvHtml5",
+            "excelHtml5",
+            "pdfHtml5",
+            {
+                extend: 'print',
+                customize: function (win) {
+                    $(win.document.body)
+                        .css('font-size', '10pt')
+                        .prepend('<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />');
 
-                            $(win.document.body)
-                                .find('table')
-                                .addClass('compact')
-                                .css('font-size', 'inherit');
-                        }
-                    }
-                ],
-                initComplete: function (settings, json) {
-                    var footer = $("#example tfoot tr");
-                    $("#example thead").append(footer);
+                    $(win.document.body)
+                        .find('table')
+                        .addClass('compact')
+                        .css('font-size', 'inherit');
                 }
-            });
+            }
+        ],
+        initComplete: function (settings, json) {
+            var footer = $("#example tfoot tr");
+            $("#example thead").append(footer);
+        }
+    });
 
-            // Apply the search
-            $("#example thead").on("keyup", "input", function () {
-                var columnIndex = $(this).parent().index();
-                if (columnIndex !== 6) { // Skip the "Action" column (index 6)
-                    table.column(columnIndex)
-                        .search(this.value)
-                        .draw();
-                }
-            });
+    // Apply the search
+    $("#example thead").on("keyup", "input", function () {
+        var columnIndex = $(this).parent().index();
+        if (columnIndex !== 6) { // Skip the "Action" column (index 6)
+            table.column(columnIndex)
+                .search(this.value)
+                .draw();
+        }
+    });
+
+    // Event delegation for edit and delete buttons
+    $('#example tbody').on('click', '.edit-btn', function () {
+        // Your edit button logic here
+        var categoryId = $(this).data('category-id');
+        // Example action, replace with your logic
+        // console.log('Edit button clicked for category ID:', categoryId);
+        $.ajax({
+            url: 'DataGet/edit_category.php',
+            method: 'POST',
+            data: { categoryid: categoryId },
+            success: function (response) {
+                $('#modalBody').html(response); // Insert the fetched data into the modal body
+                $('#editUser').modal('show'); // Show the modal
+            },
+            error: function (xhr, status, error) {
+                console.error(xhr.responseText);
+            }
         });
-    </script>
+    });
 
-    <!-- ADD DATA -->
-    <script>
+    $('#example tbody').on('click', '.delete-danger', function () {
+        // Your delete button logic here
+        var categoryId = $(this).data('id');
+        // Example action, replace with your logic
+        // console.log('Delete button clicked for category ID:', categoryId);
+        var confirmMsg = "Are you sure you want to delete this category?";
+        var id = $(this).data("id"); // Moved id retrieval here
+        var button = this; // Store reference to the button
+
+        Swal.fire({
+            title: 'Confirmation',
+            text: confirmMsg,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var table = $('#example').DataTable();
+                var row = $(button).closest('tr'); // Use the stored button reference
+                table.row(row).remove().draw(false);
+
+                $.ajax({
+                    url: "DataDelete/delete_category.php",
+                    method: "POST",
+                    data: { categoryId: id },
+                    success: function (response) {
+                        Swal.fire({
+                            title: "Success",
+                            icon: "success",
+                            text: "Deleted Successfully"
+                        });
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while updating data.'
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+
+    </script>
+<script>
         document.getElementById('categoryForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const categoryName = document.getElementById('categoryName').value.trim();
@@ -976,6 +1042,28 @@ if($_SESSION['UserRoleName'] != '0'){
         });
     </script>
 
+    <!-- Edit Data -->
+    <script>
+        $(document).ready(function () {
+            $('.btn-info').click(function () {
+                var categoryid = $(this).data('category-id');
+
+                // Make an AJAX request to fetch data from the server
+                $.ajax({
+                    url: 'DataGet/edit_category.php', // PHP script to fetch data from the server
+                    method: 'POST',
+                    data: { categoryid: categoryid },
+                    success: function (response) {
+                        // Insert the HTML into the modal body
+                        $('#modalBody').html(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
     <!-- Edit Data -->
     <script>
         $(document).ready(function () {

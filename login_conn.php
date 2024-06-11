@@ -53,6 +53,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                     $_SESSION['Username'] = $username;
                     $_SESSION['UserID'] = $row['UserID'];                    
                     $_SESSION['ProfilePic'] = $row['ProfilePhoto'];
+                   
 
                     $_SESSION['Fname'] = $row['Fname'];
                     $_SESSION['Lname'] = $row['Lname'];

@@ -66,7 +66,7 @@ echo '</div>'; // end of 1st row
 
 
 } else {
-  echo 'User not found';
+  echo 'Department not found';
 }
 ?>
 

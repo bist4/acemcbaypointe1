@@ -33,7 +33,7 @@ if (isset($_SESSION['Username'])) {
   // Close the statement
   $stmt->close();
 
-   
+
 }
 
 if (isset($_SESSION['is_Lock']) && $_SESSION['is_Lock'] == 1) {
@@ -41,23 +41,23 @@ if (isset($_SESSION['is_Lock']) && $_SESSION['is_Lock'] == 1) {
   header("Location: lock_account.php");
   exit();
 }
- 
+
 ?>
 
- 
+
 
 <?php
 $sql = "SELECT * FROM maintenance ORDER BY MaintenanceID DESC LIMIT 1";
-$q = $conn -> query($sql);
+$q = $conn->query($sql);
 $row = $q->fetch_assoc();
-$checkStatus = $row['Status']; 
+$checkStatus = $row['Status'];
 
-if($_SESSION['UserRoleName'] != '0'){
+if ($_SESSION['UserRoleName'] != '0') {
   if ($checkStatus == 0) {
     header('location: undermaintenance.php');
     session_destroy();
   }
-  
+
 }
 ?>
 
@@ -95,6 +95,18 @@ if($_SESSION['UserRoleName'] != '0'){
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
+  <style>
+    .position-relative {
+      position: relative;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(50%, -50%);
+    }
+  </style>
 
   <!-- =======================================================
   * Template Name: NiceAdmin
@@ -106,7 +118,7 @@ if($_SESSION['UserRoleName'] != '0'){
 </head>
 
 <body>
-<!-- <
+  <!-- <
 include('session_out.php');
 ?> -->
   <!-- ======= Header ======= -->
@@ -130,10 +142,86 @@ include('session_out.php');
             <i class="bi bi-search"></i>
           </a>
         </li><!-- End Search Icon-->
+        <li class="nav-item dropdown">
+
+          <?php
+
+          $userTo = $_SESSION['Fname'];
+          $messageQuery = mysqli_query($conn, "SELECT m.*, u.* FROM messages m INNER JOIN users u ON m.MFrom = u.UserID WHERE m.MTo = '$userTo' ORDER BY MessageID DESC");
+          $messageCount = mysqli_num_rows($messageQuery); // Count the number of messages
+          ?>
+
+          <a id="messageLink" class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <?php if (isset($_SESSION['bellClicked']) && $_SESSION['bellClicked']) { ?>
+              <span id="messageCount" class="badge bg-success badge-number">0</span>
+            <?php } else { ?>
+              <span id="messageCount" class="badge bg-success badge-number"><?php echo $messageCount; ?></span>
+            <?php } ?>
+          </a>
+
+          <script>
+            document.getElementById('messageLink').addEventListener('click', function (event) {
+              event.preventDefault(); // Prevent default link behavior
+              <?php if (isset($_SESSION['bellClicked'])) {
+                if ($_SESSION['bellClicked']) {
+                  echo "document.getElementById('messageCount').innerText = '0';"; // Reset count to 0 when clicked
+                  $_SESSION['bellClicked'] = false;
+                } else {
+                  echo "document.getElementById('messageCount').innerText = '$messageCount';";
+                  $_SESSION['bellClicked'] = true;
+                }
+              } else {
+                echo "document.getElementById('messageCount').innerText = '0';";
+                $_SESSION['bellClicked'] = false;
+              }
+              ?>
+  });
+</script><!-- End Messages Icon -->
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+            <li class="dropdown-header">
+              You have <?php echo $messageCount; ?> new messages
+            </li>
+          <li>
+            <hr class="dropdown-divider">
+          </li>
+          <li class="message-item">
+            <?php
+            $userTo = $_SESSION['Fname'];
+            $messageQuery = mysqli_query($conn, "SELECT m.*, u.* FROM messages m INNER JOIN users u ON m.MFrom = u.UserID WHERE m.MTo = '$userTo' ORDER BY MessageID DESC");
+            while ($row = mysqli_fetch_assoc($messageQuery)) {
+              ?>
+                  <a href="#">
+                    <img src="DataAdd/uploads/<?php echo $row['ProfilePhoto'] ?>" alt="" class="rounded-circle">
+                    <div>
+                      <h4><?php echo $row['Fname'] ?>     <?php echo $row['Lname'] ?></h4>
+                      <p><strong><?php echo $row['Activity'] ?></strong></p>
+                      <p><?php echo $row['Messages'] ?></p>
+                      <p><?php echo date('F j, Y, h:t', strtotime($row['Date'])); ?></p>
+                    </div>
+                  </a>
+                  <?php
+            }
+            ?>
+            </li>
+
+
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li class="dropdown-footer">
+              <a href="#">Show all messages</a>
+            </li>
+
+          </ul><!-- End Messages Dropdown Items -->
+        </li>
+
         <li class="nav-item dropdown pe-3">
-       
+
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-          
+
             <img src="DataAdd/uploads/<?php
             echo $_SESSION['ProfilePic'];
             ?> " alt="Profile" class="rounded-circle">
@@ -159,24 +247,24 @@ include('session_out.php');
                 ?>
 
               </h6>
-                <span>
-                  <?php 
-                     
-                    
-                    if($_SESSION['UserRoleName'] == 0){
-                      echo 'Super Admin';
-                    }else if($_SESSION['UserRoleName'] == 1){
-                      echo 'Admin';
-                    }else if($_SESSION['UserRoleName'] == 2){
-                      echo 'User';
-                    }else if($_SESSION['UserRoleName'] == 3){
-                      echo 'Doctors';
-                    }else{
-                      echo  'No user role';
-                    }
-                  
-                  ?>
-                </span>
+              <span>
+                <?php
+
+
+                if ($_SESSION['UserRoleName'] == 0) {
+                  echo 'Super Admin';
+                } else if ($_SESSION['UserRoleName'] == 1) {
+                  echo 'Admin';
+                } else if ($_SESSION['UserRoleName'] == 2) {
+                  echo 'User';
+                } else if ($_SESSION['UserRoleName'] == 3) {
+                  echo 'Doctors';
+                } else {
+                  echo 'No user role';
+                }
+
+                ?>
+              </span>
             </li>
             <li>
               <hr class="dropdown-divider">
@@ -209,199 +297,199 @@ include('session_out.php');
   </header><!-- End Header -->
 
   <aside id="sidebar" class="sidebar">
-        <ul class="sidebar-nav" id="sidebar-nav">
-            <li class="nav-item">
-                <a class="nav-link" href="home.php">
-                    <i class="bi bi-grid"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
+    <ul class="sidebar-nav" id="sidebar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="home.php">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
 
-            <?php
+      <?php
 
-            // Check if there are rows in the result set
-            if ($result->num_rows > 0) {
-                $siteOptionsSubMenu = '';
-                // $pageOptionsSubMenu = '';
-                $eventOptionsSubMenu = '';
-                $logOptionsSubMenu = '';
-
-
-                // Iterate through the result set
-                while ($row = $result->fetch_assoc()) {
-
-                    if ($row['ModuleName'] == 'Account Management') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="accounts.php">';
-                        echo '<i class="bi bi-person"></i>';
-                        echo '<span>Account Management</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
-
-                    if ($row['ModuleName'] == 'Inbox') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="inbox.php">';
-                        echo '<i class="bi bi-inbox"></i>';
-                        echo '<span>Inbox</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
-
-                    if ($row['ModuleName'] == 'Maintenance') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="maintenance.php">';
-                        echo '<i class="bi bi-gear"></i>';
-                        echo '<span>Maintenance</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
+      // Check if there are rows in the result set
+      if ($result->num_rows > 0) {
+        $siteOptionsSubMenu = '';
+        // $pageOptionsSubMenu = '';
+        $eventOptionsSubMenu = '';
+        $logOptionsSubMenu = '';
 
 
-                    // Check for Site Options module and construct sub-navigation items
-                    if ($row['ModuleName'] == 'Title & Slogan' || $row['ModuleName'] == 'Company Profile' || $row['ModuleName'] == 'Social Media' || $row['ModuleName'] == 'Copyright' || $row['ModuleName'] == 'Contact Information') {
-                        $siteOptionsSubMenu .= '<li>';
-                        $siteOptionsSubMenu .= '<a href="site_options/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
-                        $siteOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
-                        $siteOptionsSubMenu .= '</a>';
-                        $siteOptionsSubMenu .= '</li>';
-                    }
+        // Iterate through the result set
+        while ($row = $result->fetch_assoc()) {
 
-                    // // Check for Page Options module and construct sub-navigation items
-                    // if ($row['ModuleName'] == 'Add New Page') {
-                    //     $pageOptionsSubMenu .= '<li>';
-                    //     $pageOptionsSubMenu .= '<a href="pages/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
-                    //     $pageOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
-                    //     $pageOptionsSubMenu .= '</a>';
-                    //     $pageOptionsSubMenu .= '</li>';
-                    // }
+          if ($row['ModuleName'] == 'Account Management') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="accounts.php">';
+            echo '<i class="bi bi-person"></i>';
+            echo '<span>Account Management</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
-                    if ($row['ModuleName'] == 'Event List' || $row['ModuleName'] == 'Event Request') {
-                        $eventOptionsSubMenu .= '<li>';
-                        $eventOptionsSubMenu .= '<a href="events/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
-                        $eventOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
-                        $eventOptionsSubMenu .= '</a>';
-                        $eventOptionsSubMenu .= '</li>';
-                    }
+          if ($row['ModuleName'] == 'Inbox') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="inbox.php">';
+            echo '<i class="bi bi-inbox"></i>';
+            echo '<span>Inbox</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
-                    if ($row['ModuleName'] == 'Event Super Admin Logs' || $row['ModuleName'] == 'Event Admin Logs' || $row['ModuleName'] == 'Event User Logs' || $row['ModuleName'] == 'Event Doctors Logs') {
-                        $logOptionsSubMenu .= '<li>';
-                        $logOptionsSubMenu .= '<a href="logs/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
-                        $logOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
-                        $logOptionsSubMenu .= '</a>';
-                        $logOptionsSubMenu .= '</li>';
-                    }
+          if ($row['ModuleName'] == 'Maintenance') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="maintenance.php">';
+            echo '<i class="bi bi-gear"></i>';
+            echo '<span>Maintenance</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
 
+          // Check for Site Options module and construct sub-navigation items
+          if ($row['ModuleName'] == 'Title & Slogan' || $row['ModuleName'] == 'Company Profile' || $row['ModuleName'] == 'Social Media' || $row['ModuleName'] == 'Copyright' || $row['ModuleName'] == 'Contact Information') {
+            $siteOptionsSubMenu .= '<li>';
+            $siteOptionsSubMenu .= '<a href="site_options/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
+            $siteOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
+            $siteOptionsSubMenu .= '</a>';
+            $siteOptionsSubMenu .= '</li>';
+          }
 
-                    if ($row['ModuleName'] == 'Category Options') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="category.php">';
-                        echo '<i class="bi bi-justify-left"></i>';
-                        echo '<span>Category Options</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
+          // // Check for Page Options module and construct sub-navigation items
+          // if ($row['ModuleName'] == 'Add New Page') {
+          //     $pageOptionsSubMenu .= '<li>';
+          //     $pageOptionsSubMenu .= '<a href="pages/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
+          //     $pageOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
+          //     $pageOptionsSubMenu .= '</a>';
+          //     $pageOptionsSubMenu .= '</li>';
+          // }
+      
+          if ($row['ModuleName'] == 'Event List' || $row['ModuleName'] == 'Event Request') {
+            $eventOptionsSubMenu .= '<li>';
+            $eventOptionsSubMenu .= '<a href="events/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
+            $eventOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
+            $eventOptionsSubMenu .= '</a>';
+            $eventOptionsSubMenu .= '</li>';
+          }
 
-                    if ($row['ModuleName'] == 'Department Options') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="department.php">';
-                        echo '<i class="bi bi-building"></i>';
-                        echo '<span>Department Options</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
-
-                    if ($row['ModuleName'] == 'Service Options') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="service.php">';
-                        echo '<i class="bi bi-life-preserver"></i>';
-                        echo '<span>Service Options</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
-
-
-                    if ($row['ModuleName'] == 'Activity History') {
-                        echo '<li class="nav-item">';
-                        echo '<a class="nav-link collapsed" href="activity_history.php">';
-                        echo '<i class="bi bi-clock-history"></i>';
-                        echo '<span>Activity History</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
+          if ($row['ModuleName'] == 'Event Super Admin Logs' || $row['ModuleName'] == 'Event Admin Logs' || $row['ModuleName'] == 'Event User Logs' || $row['ModuleName'] == 'Event Doctors Logs') {
+            $logOptionsSubMenu .= '<li>';
+            $logOptionsSubMenu .= '<a href="logs/' . strtolower(str_replace(' ', '_', $row['ModuleName'])) . '.php">';
+            $logOptionsSubMenu .= '<i class="bi bi-circle"></i><span>' . $row['ModuleName'] . '</span>';
+            $logOptionsSubMenu .= '</a>';
+            $logOptionsSubMenu .= '</li>';
+          }
 
 
 
+          if ($row['ModuleName'] == 'Category Options') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="category.php">';
+            echo '<i class="bi bi-justify-left"></i>';
+            echo '<span>Category Options</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
-                }
+          if ($row['ModuleName'] == 'Department Options') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="department.php">';
+            echo '<i class="bi bi-building"></i>';
+            echo '<span>Department Options</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
-                // Output Site Options navigation section if there are relevant sub-navigation items
-                if ($siteOptionsSubMenu !== '') {
-                    echo '<li class="nav-item">';
-                    echo '<a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">';
-                    echo '<i class="bi bi-gear"></i><span>Site Options</span><i class="bi bi-chevron-down ms-auto"></i>';
-                    echo '</a>';
-                    echo '<ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
-                    echo $siteOptionsSubMenu; // Output the constructed sub-navigation items
-                    echo '</ul>';
-                    echo '</li>';
-                }
-
-                // if ($pageOptionsSubMenu !== '') {
-                //     echo '<li class="nav-item">';
-                //     echo '<a class="nav-link collapsed" data-bs-target="#page-nav" data-bs-toggle="collapse" href="#">';
-                //     echo '<i class="bi bi-stickies"></i><span>Page</span><i class="bi bi-chevron-down ms-auto"></i>';
-                //     echo '</a>';
-                //     echo '<ul id="page-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
-                //     echo $pageOptionsSubMenu; // Output the constructed sub-navigation items
-                //     echo '</ul>';
-                //     echo '</li>';
-                // }
-
-                if ($eventOptionsSubMenu !== '') {
-                    echo '<li class="nav-item">';
-                    echo '<a class="nav-link collapsed" data-bs-target="#event-nav" data-bs-toggle="collapse" href="#">';
-                    echo '<i class="bi bi-calendar4"></i><span>Event Options</span><i class="bi bi-chevron-down ms-auto"></i>';
-                    echo '</a>';
-                    echo '<ul id="event-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
-                    echo $eventOptionsSubMenu; // Output the constructed sub-navigation items
-                    echo '</ul>';
-                    echo '</li>';
-                }
+          if ($row['ModuleName'] == 'Service Options') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="service.php">';
+            echo '<i class="bi bi-life-preserver"></i>';
+            echo '<span>Service Options</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
 
-                if ($logOptionsSubMenu !== '') {
-                    echo '<li class="nav-item">';
-                    echo '<a class="nav-link collapsed" data-bs-target="#log-nav" data-bs-toggle="collapse" href="#">';
-                    echo '<i class="bi bi-clipboard"></i><span>Logs</span><i class="bi bi-chevron-down ms-auto"></i>';
-                    echo '</a>';
-                    echo '<ul id="log-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
-                    echo $logOptionsSubMenu; // Output the constructed sub-navigation items
-                    echo '</ul>';
-                    echo '</li>';
-                }
-            } else {
-                // Handle the case where there are no rows in the result set
-                echo "No modules found.";
-            }
+          if ($row['ModuleName'] == 'Activity History') {
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link collapsed" href="activity_history.php">';
+            echo '<i class="bi bi-clock-history"></i>';
+            echo '<span>Activity History</span>';
+            echo '</a>';
+            echo '</li>';
+          }
 
-            ?>
 
-            <?php
-            // It will be based on Action_Delete = 1 so that all users that has action delete will be have trash module
-            if ($_SESSION['UserRoleName'] == '0') {
-                echo '  <li class="nav-item">
+
+
+        }
+
+        // Output Site Options navigation section if there are relevant sub-navigation items
+        if ($siteOptionsSubMenu !== '') {
+          echo '<li class="nav-item">';
+          echo '<a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">';
+          echo '<i class="bi bi-gear"></i><span>Site Options</span><i class="bi bi-chevron-down ms-auto"></i>';
+          echo '</a>';
+          echo '<ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
+          echo $siteOptionsSubMenu; // Output the constructed sub-navigation items
+          echo '</ul>';
+          echo '</li>';
+        }
+
+        // if ($pageOptionsSubMenu !== '') {
+        //     echo '<li class="nav-item">';
+        //     echo '<a class="nav-link collapsed" data-bs-target="#page-nav" data-bs-toggle="collapse" href="#">';
+        //     echo '<i class="bi bi-stickies"></i><span>Page</span><i class="bi bi-chevron-down ms-auto"></i>';
+        //     echo '</a>';
+        //     echo '<ul id="page-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
+        //     echo $pageOptionsSubMenu; // Output the constructed sub-navigation items
+        //     echo '</ul>';
+        //     echo '</li>';
+        // }
+      
+        if ($eventOptionsSubMenu !== '') {
+          echo '<li class="nav-item">';
+          echo '<a class="nav-link collapsed" data-bs-target="#event-nav" data-bs-toggle="collapse" href="#">';
+          echo '<i class="bi bi-calendar4"></i><span>Event Options</span><i class="bi bi-chevron-down ms-auto"></i>';
+          echo '</a>';
+          echo '<ul id="event-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
+          echo $eventOptionsSubMenu; // Output the constructed sub-navigation items
+          echo '</ul>';
+          echo '</li>';
+        }
+
+
+        if ($logOptionsSubMenu !== '') {
+          echo '<li class="nav-item">';
+          echo '<a class="nav-link collapsed" data-bs-target="#log-nav" data-bs-toggle="collapse" href="#">';
+          echo '<i class="bi bi-clipboard"></i><span>Logs</span><i class="bi bi-chevron-down ms-auto"></i>';
+          echo '</a>';
+          echo '<ul id="log-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">';
+          echo $logOptionsSubMenu; // Output the constructed sub-navigation items
+          echo '</ul>';
+          echo '</li>';
+        }
+      } else {
+        // Handle the case where there are no rows in the result set
+        echo "No modules found.";
+      }
+
+      ?>
+
+      <?php
+      // It will be based on Action_Delete = 1 so that all users that has action delete will be have trash module
+      if ($_SESSION['UserRoleName'] == '0') {
+        echo '  <li class="nav-item">
                 <a class="nav-link collapsed" href="trash.php">
                 <i class="bi bi-trash"></i>
                 <span>Trash</span>
                 </a>
             </li>';
-            }
+      }
 
-            ?>
+      ?>
 
-        </ul>
+    </ul>
   </aside>
 
 
@@ -413,7 +501,7 @@ include('session_out.php');
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.php">Home</a></li>
           <li class="breadcrumb-item active">Dashboard</li>
-         
+
 
         </ol>
       </nav>
@@ -1089,6 +1177,9 @@ include('session_out.php');
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+
+
 
 </body>
 
