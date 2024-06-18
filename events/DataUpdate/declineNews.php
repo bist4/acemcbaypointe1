@@ -6,11 +6,11 @@ $response = array();
 // SELECT m.MTo, u.Fname FROM `messages` m INNER JOIN users u ON m.MTo = u.Fname;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Check if eventID is set and is a valid integer
-    if(isset($_POST['eventID']) && is_numeric($_POST['eventID'])) {
-        $eventID = $_POST['eventID'];
+    // Check if newsID is set and is a valid integer
+    if(isset($_POST['newsID']) && is_numeric($_POST['newsID'])) {
+        $newsID = $_POST['newsID'];
         $status = "DECLINE";
-        $eventTitle = $_POST['eventTitle'];
+        $newsTitle = $_POST['newsTitle'];
         $user = $_SESSION['Username'];
 
         $loggedInUsername = $_SESSION['Username'];
@@ -30,9 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $author = preg_replace('/\s*\(.*?\)\s*/', '', $authorWithParentheses);
         
         // Prepare and bind parameters for the SQL query
-        $sql = "UPDATE events SET Status = ?, Decision_Status = ? WHERE EventID = ?";
+        $sql = "UPDATE news SET Status = ?, Decision_Status = ? WHERE NewsID = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssi", $status, $decisionStatus, $eventID);
+        $stmt->bind_param("ssi", $status, $decisionStatus, $newsID);
 
         if ($stmt->execute()) {
             // Log activity if the user is logged in
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // Insert activity log into activity_history table
                     $action = 'UPDATE';
-                    $activity = 'Decline Event title '. $eventTitle;
+                    $activity = 'Decline News title '. $newsTitle;
                     date_default_timezone_set('Asia/Manila');
                     $formattedDateTime = date('Y-m-d H:i:s');
                     $active = 1; // Assuming 'Active' field is boolean
@@ -60,10 +60,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmtLog->bind_param("sssii", $action, $activity, $formattedDateTime, $loggedInUserID, $active);
                     $stmtLog->execute();
 
-                    $act = 'Decline your post event';
-                    $sqlMessages = "INSERT INTO messages (Messages, Activity, MFrom, MTo, Date, EventID) VALUES (?, ?, ?, ?, ?, ?)";
+                    $act = 'Decline your news post';
+                    $sqlMessages = "INSERT INTO messages (Messages, Activity, MFrom, MTo, Date, NewsID) VALUES (?, ?, ?, ?, ?, ?)";
                     $stmtMessages = $conn->prepare($sqlMessages);
-                    $stmtMessages->bind_param("ssissi", $message, $act, $loggedInUserID, $author, $formattedDateTime, $eventID);
+                    $stmtMessages->bind_param("ssissi", $message, $act, $loggedInUserID, $author, $formattedDateTime, $newsID);
                     $stmtMessages->execute();
 
                 } else {
@@ -75,10 +75,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $response['success'] = "Decline Successfully!";
         } else {
             // If the query fails, return error message
-            $response['error'] = "Failed to update event status!";
+            $response['error'] = "Failed to update news status!";
         }
     } else {
-        $response['error'] = "Invalid event ID!";
+        $response['error'] = "Invalid news ID!";
     }
 } else {
     $response['error'] = "Invalid request method!";

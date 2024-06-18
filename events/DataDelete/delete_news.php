@@ -11,16 +11,16 @@ use PHPMailer\PHPMailer\Exception;
 $response = array();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Check if eventID is set and is a valid integer
-    if (isset($_POST['eventID']) && is_numeric($_POST['eventID'])) {
-        $eventID = $_POST['eventID'];
+    // Check if newsID is set and is a valid integer
+    if (isset($_POST['newsID']) && is_numeric($_POST['newsID'])) {
+        $newsID = $_POST['newsID'];
         $message = $_POST['message'];
         $active = 0;
 
         // Prepare and bind parameters for the SQL query
-        $sql = "UPDATE events SET Active = ? WHERE EventID = ?";
+        $sql = "UPDATE news SET Active = ? WHERE NewsID = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $active, $eventID);
+        $stmt->bind_param("ii", $active, $newsID);
 
         if ($stmt->execute()) {
             // Log activity if the user is logged in
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // Insert activity log into activity_history table
                     $action = 'DELETE';
-                    $activity = 'Delete event';
+                    $activity = 'Delete News';
                     date_default_timezone_set('Asia/Manila');
                     $formattedDateTime = date('Y-m-d H:i:s');
                     $active = 1; // Assuming 'Active' field is boolean
@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->Port = 465;
                 $mail->setFrom('saasisubicinc@gmail.com');
                 $mail->isHTML(true);
-                $mail->Subject = "Alert: Event Deletion Notice"; // Set your email subject
+                $mail->Subject = "Alert: News Deletion Notice"; // Set your email subject
 
                 while ($row = $resultEmails->fetch_assoc()) {
                     $mail->addAddress($row['Email']);
@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                             class="CToWUd" data-bit="iit">
                                                                         <div
                                                                             style="font-family:\'Google Sans\',Roboto,RobotoDraft,Helvetica,Arial,sans-serif;border-bottom:thin solid #dadce0;color:rgba(0,0,0,0.87);line-height:32px;padding-bottom:24px;text-align:center;word-break:break-word">
-                                                                            <div style="font-size:24px">Event Deleted
+                                                                            <div style="font-size:24px">News Deleted
                                                                             </div>
                                                                             <table align="center" style="margin-top:8px">
                                                                                 <tbody>
@@ -132,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                         <div
                                                                             style="font-family:Roboto-Regular,Helvetica,Arial,sans-serif;font-size:14px;color:rgba(0,0,0,0.87);line-height:20px;padding-top:20px;text-align:left">
                                                                             <h3>Dear users,</h3>
-                                                                            Please be informed that the event has been deleted.
+                                                                            Please be informed that the news has been deleted.
                                                                             We apologize for any inconvenience caused. If you have any
                                                                             questions, please contact our support team.
                                                                         </div>
@@ -146,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                         <div
                                                                             style="font-family:Roboto-Regular,Helvetica,Arial,sans-serif;color:rgba(0,0,0,0.54);font-size:11px;line-height:18px;padding-top:12px;text-align:center">
                                                                             <div> You received this alert to inform you about the
-                                                                                deletion of upcoming events.
+                                                                                deletion of news.
                                                                                 Please note that these changes are important. If you
                                                                                 have any questions, please contact our support team.
                                                                             </div>
@@ -197,10 +197,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $response['success'] = "Delete Successfully!";
         } else {
             // If the query fails, return error message
-            $response['error'] = "Failed to update event active!";
+            $response['error'] = "Failed to update news active!";
         }
     } else {
-        $response['error'] = "Invalid event ID!";
+        $response['error'] = "Invalid news ID!";
     }
 } else {
     $response['error'] = "Invalid request method!";

@@ -2,23 +2,23 @@
 session_start();
 require ('../../config/db_con.php');
 
-$eventid = $_POST['eventid'];
+$newsID = $_POST['newsID'];
 
 // Query to fetch user data
-$table = mysqli_query($conn, "SELECT * FROM events e
-            WHERE e.Active = 1 AND e.EventID = $eventid");
+$table = mysqli_query($conn, "SELECT * FROM news n
+            WHERE n.Active = 1 AND n.NewsID = $newsID");
 
 // Fetch data and generate HTML
 if ($row = mysqli_fetch_assoc($table)) {
 
 
     echo '<div class="row">'; // 1st row
-    echo '<input type="hidden" value='.$row['EventID'].' id="eventID">';
+    echo '<input type="hidden" value='.$row['NewsID'].' id="newsID">';
     // Column for the image
     echo '<div class="col-md-6 d-flex justify-content-center">'; // 1st col for image
     echo '<div class="mb-3">';
     echo '<div class="d-flex justify-content-center">';
-    echo '<img width="100px" height="100px" src="DataAdd/uploads/' . $row['Image1'] . '" alt="Front Image">';
+    echo '<img width="100px" height="100px" src="DataAdd/uploads/' . $row['Image_News'] . '" alt="Front Image">';
     echo '</div>'; // end of d-flex justify-content-center
     echo '</div>'; // end of mb-3
     echo '</div>'; // end of col-md-6
@@ -26,11 +26,11 @@ if ($row = mysqli_fetch_assoc($table)) {
     // Column for title and description
     echo '<div class="col-md-6">'; // 2nd col for title and description
     echo '<div class="mb-3">';
-    echo '<p class="form-label">Title: ' . $row['EventTitle'] . '</p>';
+    echo '<p class="form-label">Title: ' . $row['Title_News'] . '</p>';
     echo '</div>'; // end of mb-3
 
     echo '<div class="mb-3">';
-    echo '<p class="form-label">Description: ' . $row['Description'] . '</p>';
+    echo '<p class="form-label">Description: ' . $row['Description_News'] . '</p>';
     echo '</div>'; // end of mb-3
 
     // Buttons for approval and rejection
@@ -39,7 +39,7 @@ if ($row = mysqli_fetch_assoc($table)) {
     echo '<div class="d-flex gap-2 justify-content-end">';
     if (isset($_SESSION['UserID'])) {
         // Prepare the SQL query with proper concatenation
-        $sql = "SELECT Action_Approved, Action_Reject, ModuleID FROM `privileges` WHERE ModuleID = 14  AND UserID = '" . $_SESSION['UserID'] . "'";
+        $sql = "SELECT Action_Approved, Action_Reject, ModuleID FROM `privileges` WHERE ModuleID = 15  AND UserID = '" . $_SESSION['UserID'] . "'";
 
         // Execute the SQL query
         $result = mysqli_query($conn, $sql);
@@ -52,9 +52,9 @@ if ($row = mysqli_fetch_assoc($table)) {
                 if($row['Status'] == 'APPROVED'){
                     echo '<div data-bs-toggle="tooltip">
                     <button type="button" 
-                    data-event-id="' . $row['EventID'] . '"
-                    data-author="'.$row['Author'].'"
-                    data-event-title="'.$row['EventTitle'].'"
+                    data-news-id="' . $row['NewsID'] . '"
+                    data-author="'.$row['Author_News'].'"
+                    data-news-title="'.$row['Title_News'].'"
                     class="btn btn-success decline-btn" 
                     id="declineBtn"
                     data-bs-toggle="modal" data-bs-target="#viewEvent">
@@ -65,9 +65,9 @@ if ($row = mysqli_fetch_assoc($table)) {
                    
                     echo '<div data-bs-toggle="tooltip">
                     <button type="button" 
-                    data-event-id="' . $row['EventID'] . '"
-                    data-author="'.$row['Author'].'"
-                    data-event-title="'.$row['EventTitle'].'"
+                    data-news-id="' . $row['NewsID'] . '"
+                    data-author="'.$row['Author_News'].'"
+                    data-news-title="'.$row['Title_News'].'"
                     class="btn btn-success approve-btn" 
                     id="approveBtn"
                     data-bs-toggle="modal" data-bs-target="#viewEvent">
@@ -83,9 +83,9 @@ if ($row = mysqli_fetch_assoc($table)) {
                 }else{
                     echo '<div data-bs-toggle="tooltip">
                     <button type="button" 
-                    data-event-id="' . $row['EventID'] . '"
-                    data-author="'.$row['Author'].'"
-                    data-event-title="'.$row['EventTitle'].'"
+                    data-news-id="' . $row['NewsID'] . '"
+                    data-author="'.$row['Author_News'].'"
+                    data-news-title="'.$row['Title_News'].'"
                     id="rejectBtn"
                     class="btn btn-danger reject-btn" 
                     data-bs-toggle="modal" data-bs-target="#viewEvent">
@@ -125,15 +125,15 @@ if ($row = mysqli_fetch_assoc($table)) {
 <script>
    $(document).ready(function () {
     $('#approveBtn').click(function (e) {
-        // Get the event ID from the button's data attribute
-        var eventID = $(this).data('event-id');
+        // Get the news ID from the button's data attribute
+        var newsID = $(this).data('news-id');
         var author = $(this).data('author');
-        var eventTitle = $(this).data('event-title');
+        var newsTitle = $(this).data('news-title');
 
         // Show confirmation dialog
         Swal.fire({
             title: 'Confirm',
-            text: "Are you sure you want to approve this event?",
+            text: "Are you sure you want to approve this news?",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -152,16 +152,16 @@ if ($row = mysqli_fetch_assoc($table)) {
                     confirmButtonText: 'Continue',
                     showLoaderOnConfirm: true,
                     preConfirm: (message) => {
-                        // Send AJAX request to update event status and insert message
+                        // Send AJAX request to update news status and insert message
                         return $.ajax({
                             type: 'POST',
-                            url: 'DataUpdate/approve.php',
+                            url: 'DataUpdate/approveNews.php',
                             data: {
-                                'eventID': eventID,
+                                'newsID': newsID,
                                 'message': message,
                                 'author': author,
-                                'eventTitle':eventTitle
-                            }, // Pass the event ID and message to the server
+                                'newsTitle':newsTitle
+                            }, // Pass the news ID and message to the server
                             dataType: 'json' // Specify dataType as json
                         }).then(response => {
                             // Handle successful response
@@ -178,7 +178,7 @@ if ($row = mysqli_fetch_assoc($table)) {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'An error occurred while updating event information. Please try again.'
+                                text: 'An error occurred while updating news information. Please try again.'
                             });
                             console.error(error.responseText);
                         });
@@ -195,15 +195,15 @@ if ($row = mysqli_fetch_assoc($table)) {
 <script>
    $(document).ready(function () {
     $('#declineBtn').click(function (e) {
-        // Get the event ID from the button's data attribute
-        var eventID = $(this).data('event-id');
+        // Get the news ID from the button's data attribute
+        var newsID = $(this).data('news-id');
         var author = $(this).data('author');
     
-        var eventTitle = $(this).data('event-title');
+        var newsTitle = $(this).data('news-title');
         // Show confirmation dialog
         Swal.fire({
             title: 'Confirm',
-            text: "Are you sure you want to decline this event?",
+            text: "Are you sure you want to decline this news?",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -222,16 +222,16 @@ if ($row = mysqli_fetch_assoc($table)) {
                     confirmButtonText: 'Continue',
                     showLoaderOnConfirm: true,
                     preConfirm: (message) => {
-                        // Send AJAX request to update event status and insert message
+                        // Send AJAX request to update news status and insert message
                         return $.ajax({
                             type: 'POST',
-                            url: 'DataUpdate/decline.php',
+                            url: 'DataUpdate/declineNews.php',
                             data: {
-                                'eventID': eventID,
+                                'newsID': newsID,
                                 'message': message,
                                 'author': author,
-                                'eventTitle' :eventTitle
-                            }, // Pass the event ID and message to the server
+                                'newsTitle' :newsTitle
+                            }, // Pass the news ID and message to the server
                             dataType: 'json' // Specify dataType as json
                         }).then(response => {
                             // Handle successful response
@@ -248,7 +248,7 @@ if ($row = mysqli_fetch_assoc($table)) {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'An error occurred while updating event information. Please try again.'
+                                text: 'An error occurred while updating news information. Please try again.'
                             });
                             console.error(error.responseText);
                         });
@@ -265,16 +265,16 @@ if ($row = mysqli_fetch_assoc($table)) {
 <script>
    $(document).ready(function () {
     $('#rejectBtn').click(function (e) {
-        // Get the event ID from the button's data attribute
-        var eventID = $(this).data('event-id');
+        // Get the news ID from the button's data attribute
+        var newsID = $(this).data('news-id');
         var author = $(this).data('author');
-        var eventTitle = $(this).data('event-title');
+        var newsTitle = $(this).data('news-title');
     
 
         // Show confirmation dialog
         Swal.fire({
             title: 'Confirm',
-            text: "Are you sure you want to reject this event?",
+            text: "Are you sure you want to reject this news?",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -293,16 +293,16 @@ if ($row = mysqli_fetch_assoc($table)) {
                     confirmButtonText: 'Continue',
                     showLoaderOnConfirm: true,
                     preConfirm: (message) => {
-                        // Send AJAX request to update event status and insert message
+                        // Send AJAX request to update news status and insert message
                         return $.ajax({
                             type: 'POST',
-                            url: 'DataUpdate/reject.php',
+                            url: 'DataUpdate/rejectNews.php',
                             data: {
-                                'eventID': eventID,
+                                'newsID': newsID,
                                 'message': message,
                                 'author': author,
-                                'eventTitle' :eventTitle
-                            }, // Pass the event ID and message to the server
+                                'newsTitle' :newsTitle
+                            }, // Pass the news ID and message to the server
                             dataType: 'json' // Specify dataType as json
                         }).then(response => {
                             // Handle successful response
@@ -319,7 +319,7 @@ if ($row = mysqli_fetch_assoc($table)) {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'An error occurred while updating event information. Please try again.'
+                                text: 'An error occurred while updating news information. Please try again.'
                             });
                             console.error(error.responseText);
                         });

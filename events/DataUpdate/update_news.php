@@ -9,14 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_FILES['image1']) && !empty($_FILES['image1']['name'])) {
         $image1 = handleUpload('image1');
     } else {
-        $response['error'] = 'Please select a image to upload.';
+        $response['error'] = 'Please select an image to upload.';
         echo json_encode($response);
         exit(); // Stop script execution
     }
 
-
-    $eventTitle = mysqli_real_escape_string($conn, $_POST['eventTitle']);
-    $eventDesc = mysqli_real_escape_string($conn, $_POST['eventDesc']);
+    $newsID = mysqli_real_escape_string($conn, $_POST['newsID']);
+    $eventTitle = mysqli_real_escape_string($conn, $_POST['eventTitle1']);
+    $eventDesc = mysqli_real_escape_string($conn, $_POST['eventDesc1']);
     $active = 1;
     $userAuthor = $_SESSION['Username'];
     $userRoleID = $_SESSION['UserRoleName'];
@@ -27,12 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("s", $userAuthor);
     $stmt->execute();
     $result = $stmt->get_result();
-    // $eventNumber = mt_rand(1, 9999); 
-    $sqlEvent = "SELECT MAX(EventNumber) AS max_event_number FROM events";
-    $resultEvent = $conn->query($sqlEvent);
-    $row = $resultEvent->fetch_assoc();
-    $lastEventNumber = $row['max_event_number'];
-    $eventNumber = ($lastEventNumber !== null) ? $lastEventNumber + 1 : 1;
 
     $status = "";
     $user = $_SESSION['Username'];
@@ -48,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $decisionStatus = "";
 
-    if ($userRoleID == 0) {
+    $canEdit = 0;
+    if($userRoleID == 0){
         $status = "APPROVED";
         $decisionStatus = "Approved by " . $user;
     } else {
@@ -61,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt1->execute();
     $resultDep = $stmt1->get_result();
 
-
     if ($result->num_rows > 0 && $resultDep->num_rows > 0) {
         $user = $result->fetch_assoc();
         $department = $resultDep->fetch_assoc();
@@ -70,71 +64,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aut = $fname . "\n(" . $depName . ")";
 
         date_default_timezone_set('Asia/Manila');
-
+    
         $DateTime = date('Y-m-d H:i:s');
         // Use prepared statement to prevent SQL injection
-        $sql = "INSERT INTO events (EventNumber, EventTitle, Description, Image1, Author, Status, Decision_Status, Active, Date)
-                VALUES (?,?,?,?,?,?,?,?,?)";
+        $sql = "UPDATE news SET Title_News=?, Description_News=?, Image_News=?, Author_News=?, Status=?, Decision_Status=?, Active=?, Date=?, can_edit =? WHERE NewsID=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("issssssis", $eventNumber, $eventTitle, $eventDesc, $image1, $aut, $status, $decisionStatus, $active, $DateTime);
+        $stmt->bind_param("ssssssisii", $eventTitle, $eventDesc, $image1, $aut, $status, $decisionStatus, $active, $DateTime, $canEdit, $newsID);
         if ($stmt->execute()) {
-
             if (isset($_SESSION['Username'])) {
                 $loggedInUsername = $_SESSION['Username'];
-
+    
                 // Check if the logged-in user exists in the database
                 $sqlUserCheck = "SELECT UserID FROM users WHERE Username=?";
                 $stmtUserCheck = $conn->prepare($sqlUserCheck);
                 $stmtUserCheck->bind_param("s", $loggedInUsername);
                 $stmtUserCheck->execute();
                 $resultUserCheck = $stmtUserCheck->get_result();
-
+    
                 if ($resultUserCheck && $resultUserCheck->num_rows > 0) {
                     $row = $resultUserCheck->fetch_assoc();
                     $loggedInUserID = $row['UserID'];
-
-                    $action = 'ADD';
-                    $activity = 'Add new tile : ' . $eventTitle;
-
+    
+                    $action = 'UPDATE';
+                    $activity = 'Updated news: ' . $eventTitle;
+    
                     // Set the timezone to Asia/Manila
                     date_default_timezone_set('Asia/Manila');
-
+    
                     $formattedDateTime = date('Y-m-d H:i:s');
-
+    
                     // Insert activity log into activity_history table
                     $sqlLog = "INSERT INTO activity_history (Action, Activity, DateTime, UserID, Active) VALUES (?, ?, ?, ?, ?)";
                     $stmtLog = $conn->prepare($sqlLog);
                     $stmtLog->bind_param("ssssi", $action, $activity, $formattedDateTime, $loggedInUserID, $active);
                     $resultLog = $stmtLog->execute();
-
+    
                     if (!$resultLog) {
                         // Handle log insertion failure
                         // You might want to log this failure or handle it accordingly
                     }
-
+    
                 } else {
                     // Handle user not found in database
                 }
             }
-
-            $response['success'] = "New Event created successfully";
+    
+            $response['success'] = "News updated successfully";
         } else {
             $response['error'] = "Error: " . $sql . "<br>" . $conn->error;
         }
-
+    
         // Close prepared statement
         $stmt->close();
     }
-
-
-
-
-
-
-
-
-
-
     // Return JSON response
     echo json_encode($response);
 }
@@ -142,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Function to handle file upload
 function handleUpload($inputName)
 {
-    $targetDir = "uploads/";
+    $targetDir = "../DataAdd/uploads/";
     $fileName = basename($_FILES[$inputName]["name"]);
     $targetFilePath = $targetDir . $fileName;
     $fileType = pathinfo($targetFilePath, PATHINFO_EXTENSION);

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     $result = $stmt->get_result();
     // $eventNumber = mt_rand(1, 9999); 
-    $sqlEvent = "SELECT MAX(EventNumber) AS max_event_number FROM events";
+    $sqlEvent = "SELECT MAX(NewsNumber) AS max_event_number FROM news";
     $resultEvent = $conn->query($sqlEvent);
     $row = $resultEvent->fetch_assoc();
     $lastEventNumber = $row['max_event_number'];
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $DateTime = date('Y-m-d H:i:s');
         // Use prepared statement to prevent SQL injection
-        $sql = "INSERT INTO events (EventNumber, EventTitle, Description, Image1, Author, Status, Decision_Status, Active, Date)
+        $sql = "INSERT INTO news (NewsNumber, Title_News, Description_News, Image_News, Author_News, Status, Decision_Status, Active, Date)
                 VALUES (?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issssssis", $eventNumber, $eventTitle, $eventDesc, $image1, $aut, $status, $decisionStatus, $active, $DateTime);
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $loggedInUserID = $row['UserID'];
 
                     $action = 'ADD';
-                    $activity = 'Add new tile : ' . $eventTitle;
+                    $activity = 'Add new news : ' . $eventTitle;
 
                     // Set the timezone to Asia/Manila
                     date_default_timezone_set('Asia/Manila');
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $response['success'] = "New Event created successfully";
+            $response['success'] = "New News created successfully";
         } else {
             $response['error'] = "Error: " . $sql . "<br>" . $conn->error;
         }

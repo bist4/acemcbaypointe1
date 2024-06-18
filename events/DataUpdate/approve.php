@@ -1,22 +1,35 @@
 <?php
 session_start();
-require('../../config/db_con.php');
+require ('../../config/db_con.php');
 
 $response = array();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if eventID is set and is a valid integer
-    if(isset($_POST['eventID']) && is_numeric($_POST['eventID'])) {
+    if (isset($_POST['eventID']) && is_numeric($_POST['eventID'])) {
         $eventID = $_POST['eventID'];
         $status = "APPROVED";
+        $user = $_SESSION['Username'];
+        $eventTitle = $_POST['eventTitle'];
+        $loggedInUsername = $_SESSION['Username'];
+        $sqlUserCheck = "SELECT Fname, Lname FROM users WHERE Username=?";
+        $stmtUserCheck = $conn->prepare($sqlUserCheck);
+        $stmtUserCheck->bind_param("s", $loggedInUsername);
+        $stmtUserCheck->execute();
+        $resultUserCheck = $stmtUserCheck->get_result();
+        $row = $resultUserCheck->fetch_assoc();
+        $user = $row['Fname'] . ' ' . $row['Lname'];
+
+
+        $decisionStatus = 'Approved by ' . $user;
         $message = $_POST['message'];
         $authorWithParentheses = $_POST['author'];
         $author = preg_replace('/\s*\(.*?\)\s*/', '', $authorWithParentheses);
-        
+
         // Prepare and bind parameters for the SQL query
-        $sql = "UPDATE events SET Status = ? WHERE EventID = ?";
+        $sql = "UPDATE events SET Status = ?, Decision_Status = ? WHERE EventID = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $status, $eventID);
+        $stmt->bind_param("ssi", $status, $decisionStatus, $eventID);
 
         if ($stmt->execute()) {
             // Log activity if the user is logged in
@@ -34,19 +47,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // Insert activity log into activity_history table
                     $action = 'UPDATE';
-                    $activity = 'APPROVED EVENT';
+                    $activity = 'Approve Event title '. $eventTitle;
+                    date_default_timezone_set('Asia/Manila');
                     $formattedDateTime = date('Y-m-d H:i:s');
                     $active = 1; // Assuming 'Active' field is boolean
-                    
+
                     $sqlLog = "INSERT INTO activity_history (Action, Activity, DateTime, UserID, Active) VALUES (?, ?, ?, ?, ?)";
                     $stmtLog = $conn->prepare($sqlLog);
                     $stmtLog->bind_param("sssii", $action, $activity, $formattedDateTime, $loggedInUserID, $active);
                     $stmtLog->execute();
 
                     $act = 'Approve your post event';
-                    $sqlMessages = "INSERT INTO messages (Messages, Activity, MFrom, MTo, Date) VALUES (?, ?, ?, ?, ?)";
+                    $sqlMessages = "INSERT INTO messages (Messages, Activity, MFrom, MTo, Date, EventID) VALUES (?, ?, ?, ?, ?, ?)";
                     $stmtMessages = $conn->prepare($sqlMessages);
-                    $stmtMessages->bind_param("ssiss", $message, $act, $loggedInUserID, $author, $formattedDateTime);
+                    $stmtMessages->bind_param("ssissi", $message, $act, $loggedInUserID, $author, $formattedDateTime, $eventID);
                     $stmtMessages->execute();
 
                 } else {

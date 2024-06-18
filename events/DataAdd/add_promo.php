@@ -17,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $eventTitle = mysqli_real_escape_string($conn, $_POST['eventTitle']);
     $eventDesc = mysqli_real_escape_string($conn, $_POST['eventDesc']);
+    $deadlinePromo = mysqli_real_escape_string($conn, $_POST['deadlinePromo']);
+
     $active = 1;
     $userAuthor = $_SESSION['Username'];
     $userRoleID = $_SESSION['UserRoleName'];
@@ -27,13 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("s", $userAuthor);
     $stmt->execute();
     $result = $stmt->get_result();
-    // $eventNumber = mt_rand(1, 9999); 
-    $sqlEvent = "SELECT MAX(EventNumber) AS max_event_number FROM events";
-    $resultEvent = $conn->query($sqlEvent);
-    $row = $resultEvent->fetch_assoc();
-    $lastEventNumber = $row['max_event_number'];
-    $eventNumber = ($lastEventNumber !== null) ? $lastEventNumber + 1 : 1;
-
+  
     $status = "";
     $user = $_SESSION['Username'];
 
@@ -73,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $DateTime = date('Y-m-d H:i:s');
         // Use prepared statement to prevent SQL injection
-        $sql = "INSERT INTO events (EventNumber, EventTitle, Description, Image1, Author, Status, Decision_Status, Active, Date)
+        $sql = "INSERT INTO promo_and_packages (Title_Promo, Description_Promo, Image_Promo, Author_Promo, Status, Deadline_Promo, Decision_Status, Active, Date)
                 VALUES (?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("issssssis", $eventNumber, $eventTitle, $eventDesc, $image1, $aut, $status, $decisionStatus, $active, $DateTime);
+        $stmt->bind_param("sssssssis", $eventTitle, $eventDesc, $image1, $aut, $status, $deadlinePromo, $decisionStatus, $active, $DateTime);
         if ($stmt->execute()) {
 
             if (isset($_SESSION['Username'])) {
@@ -94,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $loggedInUserID = $row['UserID'];
 
                     $action = 'ADD';
-                    $activity = 'Add new tile : ' . $eventTitle;
+                    $activity = 'Add new news : ' . $eventTitle;
 
                     // Set the timezone to Asia/Manila
                     date_default_timezone_set('Asia/Manila');
@@ -117,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $response['success'] = "New Event created successfully";
+            $response['success'] = "New Promo & Packages created successfully";
         } else {
             $response['error'] = "Error: " . $sql . "<br>" . $conn->error;
         }

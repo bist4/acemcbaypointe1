@@ -66,10 +66,13 @@ if ($_SESSION['UserRoleName'] != '0') {
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
 
     <title>Event List</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
+
 
     <!-- Favicons -->
     <link href="../assets/img/logo2.png" rel="icon">
@@ -95,8 +98,8 @@ if ($_SESSION['UserRoleName'] != '0') {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-
-
+ 
+ 
 
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
@@ -181,6 +184,40 @@ if ($_SESSION['UserRoleName'] != '0') {
             width: 100%;
             padding: 3px;
             box-sizing: border-box;
+        }
+
+        .icon-stack {
+            position: relative;
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+        }
+
+        .icon-stack .bi-lock {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            /* Ensure the lock icon is above the pencil icon */
+        }
+
+        .icon-stack .bi-pencil {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            /* Ensure the pencil icon is below the lock icon */
+            filter: blur(1px);
+            /* Adjust the blur amount as needed */
+            opacity: 0.5;
+        }
+
+        .custom-card {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .custom-card:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -492,22 +529,92 @@ if ($_SESSION['UserRoleName'] != '0') {
 
         <div class="pagetitle">
             <h1>Event List</h1>
-            <nav>
+            <nav class="d-flex justify-content-between">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">Site Options</li>
+                    <li class="breadcrumb-item">What's New</li>
                     <li class="breadcrumb-item active">Event List</li>
                 </ol>
+
             </nav>
         </div><!-- End Page Title -->
 
         <section class="section">
+
+            <?php
+
+
+            $name = $_SESSION['Fname'];
+            if ($_SESSION['UserRoleName'] == 0) {
+                $rejects = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'REJECT'")->fetch_row()[0];
+                $decline = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'DECLINE'")->fetch_row()[0];
+                $request = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'UNDER REVIEW'")->fetch_row()[0];
+            } else {
+                $rejects = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'REJECT' AND Author REGEXP '^$name\\s*\\()'")->fetch_row()[0];
+                $decline = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'DECLINE' AND Author REGEXP '^$name\\s*\\()'")->fetch_row()[0];
+                // $request = $conn->query("SELECT COUNT(*) FROM events WHERE Status = 'REQUEST' AND Author REGEXP '^$name\\s*\\()'" )->fetch_row()[0];
+            }
+
+
+            ?>
+
+
+            <div class="row">
+                <div class="col">
+                    <div class="card text-center custom-card">
+
+                        <div class="card-header bg-primary text-white">
+                            REJECT
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" data-bs-toggle="modal" data-bs-target="#rejects"
+                                style="cursor: pointer;">
+                                <?php echo $rejects ?>
+                            </h5>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card text-center custom-card">
+
+                        <div class="card-header bg-danger text-white">
+                            DECLINE
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" data-bs-toggle="modal" data-bs-target="#decline"
+                                style="cursor: pointer;">
+                                <?php echo $decline ?>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($_SESSION['UserRoleName'] == 0) {
+                    echo '<div class="col">
+                   <div class="card text-center custom-card">
+
+                        <div class="card-header bg-success text-white">
+                            REQUEST
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"  data-bs-toggle="modal" data-bs-target="#request"  style="cursor: pointer;">' . $request . '</h5>
+                        </div>
+                    </div>
+                </div>';
+                } else {
+                    echo '';
+                }
+                ?>
+            </div>
+
             <div class="row">
                 <div class="col-lg">
 
                     <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title"></h5>
+                        <div class="card-body table-responsive">
+                            <h5 class="card-title">Pending Events</h5>
 
                             <?php
                             // Assuming you have established a database connection
@@ -562,7 +669,15 @@ if ($_SESSION['UserRoleName'] != '0') {
                                 <tbody>
                                     <?php
                                     require ('../config/db_con.php');
-                                    $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'PENDING' AND Active = 1 ORDER BY EventID DESC ");
+                                    $name = $_SESSION['Fname'];
+                                    if ($_SESSION['UserRoleName'] == 0) {
+                                        $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'PENDING' AND Active = 1 ORDER BY EventID DESC");
+
+                                    } else {
+                                        $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'PENDING' AND Author REGEXP '^$name\\s*\\()' AND Active = 1 ORDER BY EventID DESC");
+
+                                    }
+
 
                                     // $serialNo = 1;
                                     while ($row = mysqli_fetch_assoc($table)) {
@@ -596,13 +711,7 @@ if ($_SESSION['UserRoleName'] != '0') {
 
                                             <td class="text-center">
                                                 <div class="d-inline-flex gap-3">
-                                                    <!-- <div data-bs-toggle="tooltip" data-bs-placement="bottom"
-                        data-bs-title="Edit">
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal"
-                            data-bs-target="#editUser">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                    </div> -->
+
                                                     <?php
                                                     if (isset($_SESSION['UserID'])) {
                                                         // Prepare the SQL query with proper concatenation
@@ -617,74 +726,13 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                             // Display the button if Action_Add is 1
                                                             if ($row_privileges['Action_View'] == 1) {
                                                                 echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="View">
-                                        <button type="button" 
-                                        data-event-id="' . $row['EventID'] . '"
-                                        class="btn btn-primary view-btn" 
-                                        data-bs-toggle="modal" data-bs-target="#viewEvent">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                      </div>';
-                                                            }
-
-                                                        } else {
-                                                            // Handle the case where the query fails
-                                                            echo "Error executing query: " . mysqli_error($conn);
-                                                        }
-                                                    } else {
-                                                        // Handle the case where UserID is not set in the session
-                                                        echo "UserID not found in session.";
-                                                    }
-                                                    ?>
-                                                    <?php
-                                                    if (isset($_SESSION['UserID'])) {
-                                                        // Prepare the SQL query with proper concatenation
-                                                        $sql = "SELECT Action_Update, ModuleID FROM `privileges` WHERE ModuleID = 14  AND UserID = '" . $_SESSION['UserID'] . "'";
-
-                                                        // Execute the SQL query
-                                                        $result = mysqli_query($conn, $sql);
-
-                                                        // Check if query was successful
-                                                        if ($result) {
-                                                            $row_privileges = mysqli_fetch_assoc($result);
-                                                            // Display the button if Action_Add is 1
-                                                            if ($row_privileges['Action_Update'] == 1) {
-                                                                echo '<button type="button" class="btn btn-info edit-btn"  
-                                data-bs-toggle="modal" data-bs-target="#editUser" 
-                                    data-category-id="' . $row['EventID'] . '">
-                                    <i class="bi bi-pencil"></i>  
-                                </button>';
-                                                            }
-                                                        } else {
-                                                            // Handle the case where the query fails
-                                                            echo "Error executing query: " . mysqli_error($conn);
-                                                        }
-                                                    } else {
-                                                        // Handle the case where UserID is not set in the session
-                                                        echo "UserID not found in session.";
-                                                    }
-                                                    ?>
-
-                                                    <?php
-                                                    if (isset($_SESSION['UserID'])) {
-                                                        // Prepare the SQL query with proper concatenation
-                                                        $sql = "SELECT Action_Delete, ModuleID FROM `privileges` WHERE ModuleID = 14  AND UserID = '" . $_SESSION['UserID'] . "'";
-
-                                                        // Execute the SQL query
-                                                        $result = mysqli_query($conn, $sql);
-
-                                                        // Check if query was successful
-                                                        if ($result) {
-                                                            $row_privileges = mysqli_fetch_assoc($result);
-                                                            // Display the button if Action_Add is 1
-                                                            if ($row_privileges['Action_Delete'] == 1) {
-                                                                echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Delete">
-                                        <button type="button" 
-                                        data-id="' . $row['EventID'] . '"
-                                        class="btn btn-danger delete-danger" 
-                                        data-bs-toggle="modal" data-bs-target="#lockAccount">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                      </div>';
+                                                                <button type="button" 
+                                                                data-event-id="' . $row['EventID'] . '"
+                                                                class="btn btn-primary view-btn" 
+                                                                data-bs-toggle="modal" data-bs-target="#viewEvent">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            </div>';
                                                             }
 
                                                         } else {
@@ -697,6 +745,9 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                     }
                                                     ?>
 
+
+
+                                                   
 
 
 
@@ -736,8 +787,8 @@ if ($_SESSION['UserRoleName'] != '0') {
             <div class="row">
                 <div class="col-lg">
                     <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title"></h5>
+                        <div class="card-body table-responsive">
+                            <h5 class="card-title">Approved News</h5>
                             <table id="example1" class="table table-striped table-bordered" cellspacing="0"
                                 width="100%">
 
@@ -748,6 +799,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                                         <th>Front Image</th>
                                         <th>Status</th>
                                         <th>Author</th>
+                                        <th>Decision Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -755,7 +807,12 @@ if ($_SESSION['UserRoleName'] != '0') {
                                     <?php
                                     require ('../config/db_con.php');
                                     $name = $_SESSION['Fname'];
-                                    $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'APPROVED' AND Active = 1 ORDER BY EventID DESC ");
+                                    if ($_SESSION['UserRoleName'] == 0) {
+                                        $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'APPROVED' AND Active = 1 ORDER BY EventID DESC ");
+                                    } else {
+                                        $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'APPROVED' OR Status = 'UNDER REVIEW' OR Status = 'REQUEST APPROVED' AND Author REGEXP '^$name\\s*\\()' AND Active = 1 ORDER BY EventID DESC ");
+                                    }
+
 
                                     // $serialNo = 1;
                                     while ($row = mysqli_fetch_assoc($table)) {
@@ -773,12 +830,14 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                     echo '<span class="badge bg-info">APPROVED</span>';
                                                 } else if ($row['Status'] == 'PENDING') {
                                                     echo '<span class="badge bg-secondary">PENDING</span>';
-                                                } else if ($row['Status'] == 'REVIEW') {
-                                                    echo '<span class="badge bg-info">REVIEW</span>';
+                                                } else if ($row['Status'] == 'UNDER REVIEW') {
+                                                    echo '<span class="badge bg-danger">UNDER REVIEW</span>';
                                                 } else if ($row['Status'] == 'DECLINE') {
                                                     echo '<span class="badge bg-warning">DECLINE</span>';
                                                 } else if ($row['Status'] == 'REJECT') {
                                                     echo '<span class="badge bg-danger">REJECT</span>';
+                                                } else if ($row['Status'] == 'REQUEST APPROVED') {
+                                                    echo '<span class="badge bg-info">REQUEST APPROVED</span>';
                                                 }
                                                 ?>
 
@@ -786,16 +845,10 @@ if ($_SESSION['UserRoleName'] != '0') {
 
                                             </td>
                                             <td><?php echo $row['Author']; ?></td>
-
+                                            <td><?php echo $row['Decision_Status'] ?></td>
                                             <td class="text-center">
                                                 <div class="d-inline-flex gap-3">
-                                                    <!-- <div data-bs-toggle="tooltip" data-bs-placement="bottom"
-data-bs-title="Edit">
-<button type="button" class="btn btn-info" data-bs-toggle="modal"
-data-bs-target="#editUser">
-<i class="bi bi-pencil"></i>
-</button>
-</div> -->
+
                                                     <?php
                                                     if (isset($_SESSION['UserID'])) {
                                                         // Prepare the SQL query with proper concatenation
@@ -810,13 +863,13 @@ data-bs-target="#editUser">
                                                             // Display the button if Action_Add is 1
                                                             if ($row_privileges['Action_View'] == 1) {
                                                                 echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="View">
-        <button type="button" 
-        data-event-id="' . $row['EventID'] . '"
-        class="btn btn-primary view-btn" 
-        data-bs-toggle="modal" data-bs-target="#viewEvent">
-            <i class="bi bi-eye"></i>
-        </button>
-      </div>';
+                                                                <button type="button" 
+                                                                data-event-id="' . $row['EventID'] . '"
+                                                                class="btn btn-primary view-btn" 
+                                                                data-bs-toggle="modal" data-bs-target="#viewEvent">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            </div>';
                                                             }
 
                                                         } else {
@@ -841,11 +894,52 @@ data-bs-target="#editUser">
                                                             $row_privileges = mysqli_fetch_assoc($result);
                                                             // Display the button if Action_Add is 1
                                                             if ($row_privileges['Action_Update'] == 1) {
-                                                                echo '<button type="button" class="btn btn-info edit-btn"  
-data-bs-toggle="modal" data-bs-target="#editUser" 
-    data-category-id="' . $row['EventID'] . '">
-    <i class="bi bi-pencil"></i>  
-</button>';
+
+
+                                                                if ($_SESSION['UserRoleName'] == 0) {
+
+                                                                    if ($row['can_edit'] == 0 || $row['can_edit'] == 1) {
+                                                                        echo '<button type="button" class="btn btn-info edit-event"  
+                                                                        id="editAdminBtn"
+                                                                    data-bs-toggle="modal" data-bs-target="#editEvent" 
+                                                                        data-event-id="' . $row['EventID'] . '"
+                                                                        data-decision="' . $row['Decision_Status'] . '"
+                                                                        data-event-title="' . $row['EventTitle'] . '"
+                                                                        data-author="' . $row['Author'] . '">
+                                                                        
+                                                                       
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>';
+                                                                    }
+
+                                                                } else if ($_SESSION['UserRoleName'] != 0) {
+                                                                    if ($row['can_edit'] == 0) {
+                                                                        echo '<button type="button" class="btn btn-info edit-btn"  
+                                                                        id="editBtn"
+                                                                    data-bs-toggle="modal" data-bs-target="#editUser" 
+                                                                        data-event-id="' . $row['EventID'] . '"
+                                                                        data-decision="' . $row['Decision_Status'] . '"
+                                                                        data-author="' . $row['Author'] . '">
+                                                                        <span class="icon-stack">
+                                                                        <i class="bi bi-lock" style="position: absolute;"></i>
+                                                                        <i class="bi bi-pencil" style="filter: blur(1px); opacity: 0.5;"></i>
+                                                                    </span>
+                                                                    </button>';
+                                                                    } else {
+                                                                        echo '<button type="button" class="btn btn-info edit-event"  
+                                                                        id="editAdminBtn"
+                                                                    data-bs-toggle="modal" data-bs-target="#editEvent" 
+                                                                        data-event-id="' . $row['EventID'] . '"
+                                                                        data-decision="' . $row['Decision_Status'] . '"
+                                                                        data-event-title="' . $row['EventTitle'] . '"
+                                                                        data-author="' . $row['Author'] . '">
+                                                                        
+                                                                       
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>';
+                                                                    }
+                                                                }
+
                                                             }
                                                         } else {
                                                             // Handle the case where the query fails
@@ -871,14 +965,14 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                                                             // Display the button if Action_Add is 1
                                                             if ($row_privileges['Action_Delete'] == 1) {
                                                                 echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Delete">
-        <button type="button" 
-        data-event-id="' . $row['EventID'] . '"
-        id="deleteBtn"
-        class="btn btn-danger delete-danger" 
-        data-bs-toggle="modal" data-bs-target="#lockAccount">
-            <i class="bi bi-trash"></i>
-        </button>
-      </div>';
+                                                                <button type="button" 
+                                                                data-event-id="' . $row['EventID'] . '"
+                                                                id="deleteBtn"
+                                                                class="btn btn-danger delete-danger" 
+                                                                data-bs-toggle="modal" data-bs-target="#lockAccount">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>';
                                                             }
 
                                                         } else {
@@ -908,6 +1002,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                                         <th>Front Image</th>
                                         <th>Status</th>
                                         <th>Author</th>
+                                        <th>Decision Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </tfoot>
@@ -919,6 +1014,8 @@ data-bs-toggle="modal" data-bs-target="#editUser"
         </section>
 
     </main><!-- End #main -->
+
+
 
     <!-- Modal -->
     <div class="modal fade" id="addUser" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -978,6 +1075,404 @@ data-bs-toggle="modal" data-bs-target="#editUser"
         </div>
     </div>
 
+    <!-- Edit modal -->
+    <div class="modal fade" id="editEvent" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="addCategoryModalLabel">
+                        Edit Event
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="eventEditForm">
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Rejects-->
+    <div class="modal fade" id="rejects" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="addCategoryModalLabel">
+                        Rejected Events
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body table-responsive" id="rejectBody">
+                    <table id="example2" class="table table-striped table-bordered" cellspacing="0" width="100%">
+
+                        <thead>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+                                <th>Message</th>
+                                <th>Author</th>
+                                <th>Date and Time</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            require ('../config/db_con.php');
+
+                            $name = $_SESSION['Fname'];
+                            if ($_SESSION['UserRoleName'] == 0) {
+                                $table = mysqli_query($conn, "SELECT m.*, e.* FROM messages m INNER JOIN events e ON m.EventID=e.EventID WHERE e.Status = 'REJECT' AND m.Activity = 'Reject your post event' AND e.Active = 1 ORDER BY e.EventID DESC");
+                            } else {
+                                $table = mysqli_query($conn, "SELECT m.*, e.* FROM messages m INNER JOIN events e ON m.EventID=e.EventID WHERE e.Status = 'REJECT' AND e.Author REGEXP '^$name\\s*\\()' AND m.Activity = 'Reject your post event' AND e.Active = 1 ORDER BY e.EventID DESC ");
+                            }
+                            // $serialNo = 1;
+                            while ($row = mysqli_fetch_assoc($table)) {
+                                ?>
+                                <tr>
+                                    <!-- <td><?php echo $serialNo++; ?></td> -->
+
+
+                                    <td><?php echo $row['EventTitle']; ?></td>
+                                    <td><img src="DataAdd/uploads/<?php echo $row['Image1']; ?>" alt="event image"
+                                            width="100px" height="100px"></td>
+                                            <td>
+                                        <?php
+                                        $message = htmlspecialchars($row['Messages']);
+                                        $maxLength = 50; // Maximum length of the message to display
+                                        if (strlen($message) > $maxLength) {
+                                            // Truncate the message and add line breaks
+                                            $message = wordwrap($message, $maxLength, "<br>\n", true);
+
+                                            // Check if the message length exceeds 150 characters to add "Read more" functionality
+                                            $maxLengthForReadMore = 150;
+                                            if (strlen($message) > $maxLengthForReadMore) {
+                                                $messageToShow = substr($message, 0, $maxLengthForReadMore);
+                                                $messageHidden = substr($message, $maxLengthForReadMore);
+                                                echo $messageToShow;
+                                                ?>
+                                                <span id="more" style="display:none;"><?php echo $messageHidden; ?></span>
+                                                 <button  class="btn btn-outline-primary" onclick="toggleReadMore()" id="myBtn">Read more</button>
+                                            <?php } else {
+                                                echo $message;
+                                            }
+                                        } else {
+                                            echo $message;
+                                        }
+                                        ?>
+                                        <script>
+                                            function toggleReadMore() {
+                                                var moreText = document.getElementById("more");
+                                                var btnText = document.getElementById("myBtn");
+
+                                                if (moreText.style.display === "none" || moreText.style.display === "") {
+                                                    moreText.style.display = "inline";
+                                                    btnText.innerHTML = "Read less";
+                                                } else {
+                                                    moreText.style.display = "none";
+                                                    btnText.innerHTML = "Read more";
+                                                }
+                                            }
+                                        </script>
+
+                                    </td>
+                                    <td><?php echo $row['Author']; ?></td>
+                                    <td><?php echo date('F j, Y   h:i A', strtotime($row['Date'])); ?></td>
+
+
+
+                                </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+                                <th>Message</th>
+                                <th>Author</th>
+                                <th>Date and Time</th>
+
+
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Decline-->
+    <div class="modal fade" id="decline" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="addCategoryModalLabel">
+                        Declined Events
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body table-responsive">
+                    
+                    <table id="example3" class="table table-striped table-bordered" cellspacing="0" width="100%">
+
+                        <thead>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+                                <th>Message</th>
+                                <th>Author</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            require ('../config/db_con.php');
+
+                            $name = $_SESSION['Fname'];
+                            if ($_SESSION['UserRoleName'] == 0) {
+                                $table = mysqli_query($conn, "SELECT m.*, e.* FROM messages m INNER JOIN events e ON m.EventID=e.EventID WHERE e.Status = 'DECLINE' AND m.Activity = 'Decline your post event' AND e.Active = 1 ORDER BY e.EventID DESC");
+                            } else {
+                                $table = mysqli_query($conn, "SELECT m.*, e.* FROM messages m INNER JOIN events e ON m.EventID=e.EventID WHERE e.Status = 'DECLINE' AND e.Author REGEXP '^$name\\s*\\()' AND m.Activity = 'Decline your post event' AND e.Active = 1 ORDER BY e.EventID DESC ");
+                            }
+
+
+
+
+
+
+                            // $serialNo = 1;
+                            while ($row = mysqli_fetch_assoc($table)) {
+                                ?>
+                                <tr>
+                                    <!-- <td><?php echo $serialNo++; ?></td> -->
+
+
+                                    <td><?php echo $row['EventTitle']; ?></td>
+                                    <td><img src="DataAdd/uploads/<?php echo $row['Image1']; ?>" alt="event image"
+                                            width="100px" height="100px"></td>
+                                    <td>
+                                        <?php
+                                        $message = htmlspecialchars($row['Messages']);
+                                        $maxLength = 50; // Maximum length of the message to display
+                                        if (strlen($message) > $maxLength) {
+                                            // Truncate the message and add line breaks
+                                            $message = wordwrap($message, $maxLength, "<br>\n", true);
+
+                                            // Check if the message length exceeds 150 characters to add "Read more" functionality
+                                            $maxLengthForReadMore = 150;
+                                            if (strlen($message) > $maxLengthForReadMore) {
+                                                $messageToShow = substr($message, 0, $maxLengthForReadMore);
+                                                $messageHidden = substr($message, $maxLengthForReadMore);
+                                                echo $messageToShow;
+                                                ?>
+                                                <span id="more" style="display:none;"><?php echo $messageHidden; ?></span>
+                                                 <button  class="btn btn-outline-primary" onclick="toggleReadMore()" id="myBtn">Read more</button>
+                                            <?php } else {
+                                                echo $message;
+                                            }
+                                        } else {
+                                            echo $message;
+                                        }
+                                        ?>
+                                        <script>
+                                            function toggleReadMore() {
+                                                var moreText = document.getElementById("more");
+                                                var btnText = document.getElementById("myBtn");
+
+                                                if (moreText.style.display === "none" || moreText.style.display === "") {
+                                                    moreText.style.display = "inline";
+                                                    btnText.innerHTML = "Read less";
+                                                } else {
+                                                    moreText.style.display = "none";
+                                                    btnText.innerHTML = "Read more";
+                                                }
+                                            }
+                                        </script>
+
+                                    </td>
+
+
+
+                                    <td><?php echo $row['Author']; ?></td>
+
+
+                                </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+                                <th>Message</th>
+                                <th>Author</th>
+
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Request-->
+    <div class="modal fade" id="request" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog  modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="addCategoryModalLabel">
+                        Events Requested for Edit
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body table-responsive">
+                    <table id="example4" class="table table-striped table-bordered" cellspacing="0" width="100%">
+
+                        <thead>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+                                <th>Request</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            require ('../config/db_con.php');
+
+                            $table = mysqli_query($conn, "SELECT * FROM events WHERE Status = 'UNDER REVIEW' AND Active = 1 ORDER BY EventID DESC");
+
+
+
+
+                            // $serialNo = 1;
+                            while ($row = mysqli_fetch_assoc($table)) {
+                                ?>
+                                <tr>
+                                    <!-- <td><?php echo $serialNo++; ?></td> -->
+
+
+                                    <td><?php echo $row['EventTitle']; ?></td>
+                                    <td><img src="DataAdd/uploads/<?php echo $row['Image1']; ?>" alt="event image"
+                                            width="100px" height="100px"></td>
+
+                                    <td><?php echo $row['Decision_Status']; ?></td>
+                                    <td class="text-center">
+                                        <div class="d-inline-flex gap-3">
+                                            <?php
+                                            if (isset($_SESSION['UserID'])) {
+                                                // Prepare the SQL query with proper concatenation
+                                                $sql = "SELECT Action_Approved, ModuleID FROM `privileges` WHERE ModuleID = 14  AND UserID = '" . $_SESSION['UserID'] . "'";
+
+                                                // Execute the SQL query
+                                                $result = mysqli_query($conn, $sql);
+
+                                                // Check if query was successful
+                                                if ($result) {
+                                                    $row_privileges = mysqli_fetch_assoc($result);
+                                                    // Display the button if Action_Add is 1
+                                                    if ($row_privileges['Action_Approved'] == 1) {
+
+                                                        echo '<button type="button" class="btn btn-info edit-btn"  
+                                                                    id="approvedRequest"
+                                                                data-bs-toggle="modal" data-bs-target="#editUser" 
+                                                                    data-event-id="' . $row['EventID'] . '"
+                                                                    data-decision="' . $row['Decision_Status'] . '"
+                                                                    data-event-title="' . $row['EventTitle'] . '"
+
+                                                                    data-author="' . $row['Author'] . '">
+                                                                    <i class="">Approved Request</i>
+                                                                 
+                                                                </button>';
+
+
+                                                    }
+                                                } else {
+                                                    // Handle the case where the query fails
+                                                    echo "Error executing query: " . mysqli_error($conn);
+                                                }
+                                            } else {
+                                                // Handle the case where UserID is not set in the session
+                                                echo "UserID not found in session.";
+                                            }
+                                            ?>
+
+                                            <?php
+                                            if (isset($_SESSION['UserID'])) {
+                                                // Prepare the SQL query with proper concatenation
+                                                $sql = "SELECT Action_Reject, ModuleID FROM `privileges` WHERE ModuleID = 14  AND UserID = '" . $_SESSION['UserID'] . "'";
+
+                                                // Execute the SQL query
+                                                $result = mysqli_query($conn, $sql);
+
+                                                // Check if query was successful
+                                                if ($result) {
+                                                    $row_privileges = mysqli_fetch_assoc($result);
+                                                    // Display the button if Action_Add is 1
+                                                    if ($row_privileges['Action_Reject'] == 1) {
+
+                                                        echo '<button type="button" class="btn btn-danger edit-btn"  
+                                                                    id="rejectRequest"
+                                                                data-bs-toggle="modal" data-bs-target="#editUser" 
+                                                                    data-event-id="' . $row['EventID'] . '"
+                                                                    data-decision="' . $row['Decision_Status'] . '"
+                                                                    data-event-title="'.$row['EventTitle'].'"
+                                                                    data-author="' . $row['Author'] . '">
+                                                                    <i class="">Reject Request</i>
+                                                                 
+                                                                </button>';
+
+
+                                                    }
+                                                } else {
+                                                    // Handle the case where the query fails
+                                                    echo "Error executing query: " . mysqli_error($conn);
+                                                }
+                                            } else {
+                                                // Handle the case where UserID is not set in the session
+                                                echo "UserID not found in session.";
+                                            }
+                                            ?>
+                                        </div>
+                                    </td>
+
+
+                                </tr>
+                                <?php
+                            }
+                            ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <!-- <th>Serial No.</th> -->
+                                <th>Event Title</th>
+                                <th>Front Image</th>
+
+                                <th>Request</th>
+                                <th>Action</th>
+
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <footer id="footer" class="footer">
         <div class="copyright">
             &copy; Copyright <strong>
@@ -1026,6 +1521,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
     <script src='https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js'></script>
     <script src='https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js'></script>
 
+    <!-- Table Example  -->
     <script>
         $(document).ready(function () {
             //Only needed for the filename of export files.
@@ -1046,6 +1542,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                 dom: '<"dt-buttons"Bf><"clear">lirtp',
                 paging: true,
                 autoWidth: true,
+
                 buttons: [
                     "colvis",
                     "copyHtml5",
@@ -1122,6 +1619,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
         });
     </script>
 
+    <!--Table Example 1  -->
     <script>
         $(document).ready(function () {
             //Only needed for the filename of export files.
@@ -1130,7 +1628,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
             // Create search inputs in footer
             $("#example1 tfoot th").each(function (index) {
                 var title = $(this).text();
-                if (index !== 4) { // Skip the "Action" column (index 6)
+                if (index !== 5) { // Skip the "Action" column (index 6)
                     $(this).html('<input type="text" placeholder="Search ' + title + '" />');
                 } else {
                     $(this).empty(); // Remove label for "Action" column
@@ -1142,6 +1640,7 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                 dom: '<"dt-buttons"Bf><"clear">lirtp',
                 paging: true,
                 autoWidth: true,
+                responsive: true,
                 buttons: [
                     "colvis",
                     "copyHtml5",
@@ -1202,18 +1701,272 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                 var eventid = $(this).data('event-id');
                 // Example action, replace with your logic
                 // console.log('Edit button clicked for category ID:', eventid);
+
+            });
+        });
+    </script>
+
+    <!--Table Example 2  -->
+    <script>
+        $(document).ready(function () {
+            //Only needed for the filename of export files.
+            //Normally set in the title tag of your page.
+
+            // Create search inputs in footer
+            $("#example2 tfoot th").each(function (index) {
+                var title = $(this).text();
+                if (index !== 4) { // Skip the "Action" column (index 6)
+                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                } else if (index = 5) { // Skip the "Action" column (index 6)
+                    $(this).html('<input type="date" placeholder="Search ' + title + '"class="date-search"/>');
+                }
+                else {
+                    $(this).empty(); // Remove label for "Action" column
+                }
+            });
+            // DataTable initialisation
+            var table = $("#example2").DataTable({
+                ordering: false,
+                dom: '<"dt-buttons"Bf><"clear">lirtp',
+                paging: true,
+                autoWidth: true,
+                responsive: true,
+                buttons: [
+                    "colvis",
+                    "copyHtml5",
+                    "csvHtml5",
+                    "excelHtml5",
+                    "pdfHtml5",
+                    {
+                        extend: 'print',
+                        customize: function (win) {
+                            $(win.document.body)
+                                .css('font-size', '10pt')
+                                .prepend('<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />');
+
+                            $(win.document.body)
+                                .find('table')
+                                .addClass('compact')
+                                .css('font-size', 'inherit');
+                        }
+                    }
+                ],
+                initComplete: function (settings, json) {
+                    var footer = $("#example2 tfoot tr");
+                    $("#example2 thead").append(footer);
+                }
+            });
+
+            // Apply the search
+            $("#example2 thead").on("keyup", "input", function () {
+                var columnIndex = $(this).parent().index();
+                if (columnIndex !== 6) { // Skip the "Action" column (index 6)
+                    table.column(columnIndex)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $('#example2 tbody').on('click', '.view-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
                 $.ajax({
-                    url: 'DataGet/edit_event.php',
+                    url: 'DataGet/get_event.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { categoryid: eventid },
+                    data: { eventid: eventid },
                     success: function (response) {
-                        $('#modalBody').html(response); // Insert the fetched data into the modal body
-                        $('#editUser').modal('show'); // Show the modal
+                        // Insert the HTML into the modal body
+                        $('#eventBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
                     }
                 });
+            });
+
+            $('#example2 tbody').on('click', '.edit-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
+
+            });
+        });
+    </script>
+
+    <!--Table Example 3  -->
+    <script>
+        $(document).ready(function () {
+            //Only needed for the filename of export files.
+            //Normally set in the title tag of your page.
+
+            // Create search inputs in footer
+            $("#example3 tfoot th").each(function (index) {
+                var title = $(this).text();
+                if (index !== 4) { // Skip the "Action" column (index 6)
+                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                } else {
+                    $(this).empty(); // Remove label for "Action" column
+                }
+            });
+            // DataTable initialisation
+            var table = $("#example3").DataTable({
+                ordering: false,
+                dom: '<"dt-buttons"Bf><"clear">lirtp',
+                paging: true,
+                autoWidth: true,
+                responsive: true,
+                buttons: [
+                    "colvis",
+                    "copyHtml5",
+                    "csvHtml5",
+                    "excelHtml5",
+                    "pdfHtml5",
+                    {
+                        extend: 'print',
+                        customize: function (win) {
+                            $(win.document.body)
+                                .css('font-size', '10pt')
+                                .prepend('<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />');
+
+                            $(win.document.body)
+                                .find('table')
+                                .addClass('compact')
+                                .css('font-size', 'inherit');
+                        }
+                    }
+                ],
+                initComplete: function (settings, json) {
+                    var footer = $("#example3 tfoot tr");
+                    $("#example3 thead").append(footer);
+                }
+            });
+
+
+            // Apply the search
+            $("#example3 thead").on("keyup", "input", function () {
+                var columnIndex = $(this).parent().index();
+                if (columnIndex !== 6) { // Skip the "Action" column (index 6)
+                    table.column(columnIndex)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $('#example3 tbody').on('click', '.view-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
+                $.ajax({
+                    url: 'DataGet/get_event.php', // PHP script to fetch data from the server
+                    method: 'POST',
+                    data: { eventid: eventid },
+                    success: function (response) {
+                        // Insert the HTML into the modal body
+                        $('#eventBody').html(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+
+            $('#example3 tbody').on('click', '.edit-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
+
+            });
+        });
+    </script>
+
+    <!--Table Example 4  -->
+    <script>
+        $(document).ready(function () {
+            //Only needed for the filename of export files.
+            //Normally set in the title tag of your page.
+
+            // Create search inputs in footer
+            $("#example4 tfoot th").each(function (index) {
+                var title = $(this).text();
+                if (index !== 4) { // Skip the "Action" column (index 6)
+                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                } else {
+                    $(this).empty(); // Remove label for "Action" column
+                }
+            });
+            // DataTable initialisation
+            var table = $("#example4").DataTable({
+                ordering: false,
+                dom: '<"dt-buttons"Bf><"clear">lirtp',
+                paging: true,
+                autoWidth: true,
+                responsive: true,
+                buttons: [
+                    "colvis",
+                    "copyHtml5",
+                    "csvHtml5",
+                    "excelHtml5",
+                    "pdfHtml5",
+                    {
+                        extend: 'print',
+                        customize: function (win) {
+                            $(win.document.body)
+                                .css('font-size', '10pt')
+                                .prepend('<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />');
+
+                            $(win.document.body)
+                                .find('table')
+                                .addClass('compact')
+                                .css('font-size', 'inherit');
+                        }
+                    }
+                ],
+                initComplete: function (settings, json) {
+                    var footer = $("#example4 tfoot tr");
+                    $("#example4 thead").append(footer);
+                }
+            });
+
+            // Apply the search
+            $("#example4 thead").on("keyup", "input", function () {
+                var columnIndex = $(this).parent().index();
+                if (columnIndex !== 6) { // Skip the "Action" column (index 6)
+                    table.column(columnIndex)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+
+            $('#example4 tbody').on('click', '.view-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
+                $.ajax({
+                    url: 'DataGet/get_event.php', // PHP script to fetch data from the server
+                    method: 'POST',
+                    data: { eventid: eventid },
+                    success: function (response) {
+                        // Insert the HTML into the modal body
+                        $('#eventBody').html(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+
+            $('#example4 tbody').on('click', '.edit-btn', function () {
+                // Your edit button logic here
+                var eventid = $(this).data('event-id');
+                // Example action, replace with your logic
+                // console.log('Edit button clicked for category ID:', eventid);
+
             });
         });
     </script>
@@ -1361,58 +2114,144 @@ data-bs-toggle="modal" data-bs-target="#editUser"
             });
         });
     </script>
-<!-- Delete -->
-<script>
-    $(document).ready(function () {
-        // Use event delegation to handle clicks on any delete button
-        $(document).on('click', '#deleteBtn', function (e) {
-            // Get the event ID from the button's data attribute
-            var eventID = $(this).data('event-id');
 
-            // Show confirmation dialog
-            Swal.fire({
-                title: 'Confirm',
-                text: "Are you sure you want to delete this event?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
-            }).then((result) => {
-                // If user confirms, send AJAX request to update event status
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: "Authentication",
-                        input: "text",
-                        inputAttributes: {
-                            autocapitalize: "off"
-                        },
-                        showCancelButton: true,
-                        confirmButtonText: "Continue",
-                        showLoaderOnConfirm: true,
-                        preConfirm: async (username) => {
-                            try {
-                                // Retrieve the session username using PHP
-                                const sessionUsername = "<?php echo isset($_SESSION['Username']) ? $_SESSION['Username'] : ''; ?>";
-                                if (username !== sessionUsername) {
-                                    throw new Error("Username doesn't match the session username");
+    <!-- Delete -->
+    <script>
+        $(document).ready(function () {
+            // Use event delegation to handle clicks on any delete button
+            $(document).on('click', '#deleteBtn', function (e) {
+                // Get the event ID from the button's data attribute
+                var eventID = $(this).data('event-id');
+
+                // Show confirmation dialog
+                Swal.fire({
+                    title: 'Confirm',
+                    text: "Are you sure you want to delete this event?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            // Prompt for authentication
+                            const { value: username } = await Swal.fire({
+                                title: "Authentication",
+                                input: "text",
+                                inputAttributes: {
+                                    autocapitalize: "off"
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: "Continue",
+                                showLoaderOnConfirm: true,
+                                preConfirm: async (username) => {
+                                    try {
+                                        // Retrieve session username using PHP
+                                        const sessionUsername = "<?php echo isset($_SESSION['Username']) ? $_SESSION['Username'] : ''; ?>";
+                                        if (username !== sessionUsername) {
+                                            throw new Error("Username doesn't match the session username");
+                                        }
+                                        return { username: sessionUsername };
+                                    } catch (error) {
+                                        Swal.showValidationMessage(error.message);
+                                    }
+                                },
+                                allowOutsideClick: () => !Swal.isLoading()
+                            });
+
+                            if (username) {
+                                // Prompt for deletion message
+                                const { value: message } = await Swal.fire({
+                                    title: 'Message',
+                                    input: 'textarea',
+                                    inputAttributes: {
+                                        autocapitalize: 'off'
+                                    },
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Continue',
+                                    showLoaderOnConfirm: true,
+                                    preConfirm: (message) => {
+                                        return $.ajax({
+                                            type: 'POST',
+                                            url: 'DataDelete/delete_event.php',
+                                            data: { 'eventID': eventID, 'message': message },
+                                            dataType: 'json'
+                                        });
+                                    }
+                                });
+
+                                // Handle deletion response
+                                if (message && message.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: message.success,
+                                        onClose: () => {
+                                            window.location.reload();
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'An error occurred while deleting the event. Please try again.'
+                                    });
                                 }
-                                return { username: sessionUsername };
-                            } catch (error) {
-                                Swal.showValidationMessage(`
-                                    ${error.message}
-                                `);
                             }
-                        },
-                        allowOutsideClick: () => !Swal.isLoading()
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                type: 'POST',
-                                url: 'DataDelete/delete_event.php',
-                                data: { 'eventID': eventID }, // Pass the event ID to the server
-                                dataType: 'json', // Specify dataType as json
-                                success: function (response) {
+                        } catch (error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: error.message || 'An error occurred. Please try again.'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Edit Request-->
+    <script>
+        $(document).ready(function () {
+            $(document).on('click', '#editBtn', function (e) {
+                var eventID = $(this).data('event-id');
+                var author = $(this).data('author');
+                var decision = $(this).data('decision');
+
+                Swal.fire({
+                    title: 'Confirm',
+                    text: "Are you sure you want to request an edit?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Message',
+                            input: 'textarea',
+                            inputAttributes: {
+                                autocapitalize: 'off'
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Continue',
+                            showLoaderOnConfirm: true,
+                            preConfirm: (message) => {
+                                // Send AJAX request to update event status and insert message
+                                return $.ajax({
+                                    type: 'POST',
+                                    url: 'DataUpdate/request.php',
+                                    data: {
+                                        'eventID': eventID,
+                                        'message': message,
+                                        'author': author,
+                                        'decision': decision
+                                    }, // Pass the event ID and message to the server
+                                    dataType: 'json' // Specify dataType as json
+                                }).then(response => {
                                     // Handle successful response
                                     Swal.fire({
                                         icon: 'success',
@@ -1422,24 +2261,168 @@ data-bs-toggle="modal" data-bs-target="#editUser"
                                             window.location.reload();
                                         }
                                     });
-                                },
-                                error: function (xhr, status, error) {
+                                }).catch(error => {
                                     // Handle error response
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
-                                        text: 'An error occurred while deleting the event. Please try again.'
+                                        text: 'An error occurred while updating event information. Please try again.'
                                     });
-                                    console.error(xhr.responseText);
-                                }
-                            });
-                        }
-                    });
-                }
+                                    console.error(error.responseText);
+                                });
+                            }
+                        });
+                    }
+                });
+
+
+
+
             });
         });
-    });
-</script>
+    </script>
+
+    <!-- Edit Admin-->
+
+    <script>
+        $(document).ready(function () {
+            $('.edit-event').click(function () {
+                var eventID = $(this).data('event-id');
+
+                // Make an AJAX request to fetch data from the server
+                $.ajax({
+                    url: 'DataGet/edit_event.php', // PHP script to fetch data from the server
+                    method: 'POST',
+                    data: { eventID: eventID },
+                    success: function (response) {
+                        // Insert the HTML into the modal body
+                        $('#eventEditForm').html(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Approved request -->
+    <script>
+        $(document).ready(function () {
+            $(document).on('click', '#approvedRequest', function (e) {
+                e.preventDefault();
+                var eventID = $(this).data('event-id');
+                var author = $(this).data('author');
+                var decision = $(this).data('decision');
+                var eventTitle = $(this).data('event-title');
+
+
+                Swal.fire({
+                    title: 'Confirm',
+                    text: "Are you sure you want to approve the request?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            url: 'DataUpdate/approveReq.php',
+                            data: {
+                                'eventID': eventID,
+                                'author': author,
+                                'decision': decision,
+                                'eventTitle': eventTitle
+                            },
+                            dataType: 'json',
+                            success: function (response) {
+                                // Handle success scenario
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: response.success,
+                                    icon: 'success'
+                                }).then(() => {
+                                    // Optionally reload or update the page
+                                    location.reload();
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                // Handle error scenario
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error processing your request.',
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+    </script>
+
+ <!-- Reject request -->
+ <script>
+        $(document).ready(function () {
+            $(document).on('click', '#rejectRequest', function (e) {
+                e.preventDefault();
+                var eventID = $(this).data('event-id');
+                var author = $(this).data('author');
+                var decision = $(this).data('decision');
+                var eventTitle = $(this).data('event-title');
+
+
+                Swal.fire({
+                    title: 'Confirm',
+                    text: "Are you sure you want to approve the request?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            url: 'DataUpdate/rejectReqEvent.php',
+                            data: {
+                                'eventID': eventID,
+                                'author': author,
+                                'decision': decision,
+                                'eventTitle': eventTitle
+                            },
+                            dataType: 'json',
+                            success: function (response) {
+                                // Handle success scenario
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: response.success,
+                                    icon: 'success'
+                                }).then(() => {
+                                    // Optionally reload or update the page
+                                    location.reload();
+                                });
+                            },
+                            error: function (xhr, status, error) {
+                                // Handle error scenario
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error processing your request.',
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+    </script>
+
+
 
 </body>
 
