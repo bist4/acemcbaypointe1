@@ -782,15 +782,14 @@ if ($_SESSION['UserRoleName'] != '0') {
                 <div class="col-lg">
                     <div class="card">
                         <div class="card-body table-responsive">
-                            <h5 class="card-title">Approved News</h5>
+                            <h5 class="card-title">Approved Promo and Packages</h5>
                             <table id="example1" class="table table-striped table-bordered" cellspacing="0"
                                 width="100%">
-
                                 <thead>
                                     <tr>
                                         <!-- <th>Serial No.</th> -->
-                                        <th>News Title</th>
-                                        <th>News Image</th>
+                                        <th>Title</th>
+                                        <th>Image</th>
                                         <th>Status</th>
                                         <th>Author</th>
                                         <th>Decision Status</th>
@@ -802,9 +801,9 @@ if ($_SESSION['UserRoleName'] != '0') {
                                     require ('../config/db_con.php');
                                     $name = $_SESSION['Fname'];
                                     if ($_SESSION['UserRoleName'] == 0) {
-                                        $table = mysqli_query($conn, "SELECT * FROM news WHERE Status = 'APPROVED' AND Active = 1 ORDER BY NewsID DESC ");
+                                        $table = mysqli_query($conn, "SELECT * FROM promo_and_packages WHERE Status = 'APPROVED' AND Active = 1 ORDER BY Promo_and_PackagesID DESC ");
                                     } else {
-                                        $table = mysqli_query($conn, "SELECT * FROM news WHERE Status = 'APPROVED' OR Status = 'UNDER REVIEW' OR Status = 'REQUEST APPROVED' AND Author_News REGEXP '^$name\\s*\\()' AND Active = 1 ORDER BY NewsID DESC ");
+                                        $table = mysqli_query($conn, "SELECT * FROM promo_and_packages WHERE Status = 'APPROVED' OR Status = 'UNDER REVIEW' OR Status = 'REQUEST APPROVED' AND Author_Promo REGEXP '^$name\\s*\\()' AND Active = 1 ORDER BY Promo_and_PackagesID DESC ");
                                     }
 
 
@@ -814,8 +813,8 @@ if ($_SESSION['UserRoleName'] != '0') {
                                         <tr>
                                             <!-- <td><?php echo $serialNo++; ?></td> -->
 
-                                            <td><?php echo $row['Title_News']; ?></td>
-                                            <td><img src="DataAdd/uploads/<?php echo $row['Image_News']; ?>"
+                                            <td><?php echo $row['Title_Promo']; ?></td>
+                                            <td><img src="DataAdd/uploads/<?php echo $row['Image_Promo']; ?>"
                                                     alt="news image" width="100px" height="100px"></td>
                                             <td>
                                                 <?php
@@ -838,7 +837,7 @@ if ($_SESSION['UserRoleName'] != '0') {
 
 
                                             </td>
-                                            <td><?php echo $row['Author_News']; ?></td>
+                                            <td><?php echo $row['Author_Promo']; ?></td>
                                             <td><?php echo $row['Decision_Status'] ?></td>
                                             <td class="text-center">
                                                 <div class="d-inline-flex gap-3">
@@ -858,7 +857,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                             if ($row_privileges['Action_View'] == 1) {
                                                                 echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="View">
                                                                 <button type="button" 
-                                                                data-news-id="' . $row['NewsID'] . '"
+                                                                data-promo-id="' . $row['Promo_and_PackagesID'] . '"
                                                                 class="btn btn-primary view-btn" 
                                                                 data-bs-toggle="modal" data-bs-target="#viewEvent">
                                                                     <i class="bi bi-eye"></i>
@@ -896,10 +895,10 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                                         echo '<button type="button" class="btn btn-info edit-event"  
                                                                         id="editAdminBtn"
                                                                     data-bs-toggle="modal" data-bs-target="#editEvent" 
-                                                                        data-news-id="' . $row['NewsID'] . '"
+                                                                        data-promo-id="' . $row['Promo_and_PackagesID'] . '"
                                                                         data-decision="' . $row['Decision_Status'] . '"
-                                                                        data-news-title="' . $row['Title_News'] . '"
-                                                                        data-author="' . $row['Author_News'] . '">
+                                                                        data-promo-title="' . $row['Title_Promo'] . '"
+                                                                        data-author="' . $row['Author_Promo'] . '">
                                                                         
                                                                        
                                                                         <i class="bi bi-pencil"></i>
@@ -911,9 +910,9 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                                         echo '<button type="button" class="btn btn-info edit-btn"  
                                                                         id="editBtn"
                                                                     data-bs-toggle="modal" data-bs-target="#editUser" 
-                                                                        data-news-id="' . $row['NewsID'] . '"
+                                                                        data-promo-id="' . $row['Promo_and_PackagesID'] . '"
                                                                         data-decision="' . $row['Decision_Status'] . '"
-                                                                        data-author="' . $row['Author_News'] . '">
+                                                                        data-author="' . $row['Author_Promo'] . '">
                                                                         <span class="icon-stack">
                                                                         <i class="bi bi-lock" style="position: absolute;"></i>
                                                                         <i class="bi bi-pencil" style="filter: blur(1px); opacity: 0.5;"></i>
@@ -923,12 +922,11 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                                         echo '<button type="button" class="btn btn-info edit-event"  
                                                                         id="editAdminBtn"
                                                                     data-bs-toggle="modal" data-bs-target="#editEvent" 
-                                                                        data-news-id="' . $row['NewsID'] . '"
+                                                                        data-promo-id="' . $row['Promo_and_PackagesID'] . '"
                                                                         data-decision="' . $row['Decision_Status'] . '"
-                                                                        data-news-title="' . $row['Title_News'] . '"
-                                                                        data-author="' . $row['Author_News'] . '">
+                                                                        data-promo-title="' . $row['Title_Promo'] . '"
+                                                                        data-author="' . $row['Author_Promo'] . '">
                                                                         
-                                                                       
                                                                         <i class="bi bi-pencil"></i>
                                                                     </button>';
                                                                     }
@@ -960,7 +958,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                                                             if ($row_privileges['Action_Delete'] == 1) {
                                                                 echo '<div data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Delete">
                                                                 <button type="button" 
-                                                                data-news-id="' . $row['NewsID'] . '"
+                                                                data-promo-id="' . $row['Promo_and_PackagesID'] . '"
                                                                 id="deleteBtn"
                                                                 class="btn btn-danger delete-danger" 
                                                                 data-bs-toggle="modal" data-bs-target="#lockAccount">
@@ -992,8 +990,8 @@ if ($_SESSION['UserRoleName'] != '0') {
                                 <tfoot>
                                     <tr>
                                         <!-- <th>Serial No.</th> -->
-                                        <th>News Title</th>
-                                        <th>Front Image</th>
+                                        <th>Title</th>
+                                        <th>Image</th>
                                         <th>Status</th>
                                         <th>Author</th>
                                         <th>Decision Status</th>
@@ -1077,7 +1075,7 @@ if ($_SESSION['UserRoleName'] != '0') {
 
 
                 </div>
-                <div class="modal-body" id="newsBody">
+                <div class="modal-body" id="promoBody">
 
 
                 </div>
@@ -1593,16 +1591,16 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example tbody').on('click', '.view-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/get_news.php', // PHP script to fetch data from the server
+                    url: 'DataGet/get_promo.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { newsID: newsID },
+                    data: { promoID: promoID },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -1612,13 +1610,13 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example tbody').on('click', '.edit-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/edit_event.php',
+                    url: 'DataGet/edit_promo.php',
                     method: 'POST',
-                    data: { categoryid: newsID },
+                    data: { categoryid: promoID },
                     success: function (response) {
                         $('#modalBody').html(response); // Insert the fetched data into the modal body
                         $('#editUser').modal('show'); // Show the modal
@@ -1636,7 +1634,6 @@ if ($_SESSION['UserRoleName'] != '0') {
         $(document).ready(function () {
             //Only needed for the filename of export files.
             //Normally set in the title tag of your page.
-
             // Create search inputs in footer
             $("#example1 tfoot th").each(function (index) {
                 var title = $(this).text();
@@ -1691,16 +1688,16 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example1 tbody').on('click', '.view-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/get_news.php', // PHP script to fetch data from the server
+                    url: 'DataGet/get_promo.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { newsID: newsID },
+                    data: { promoID: promoID },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -1710,9 +1707,9 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example1 tbody').on('click', '.edit-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
 
             });
         });
@@ -1781,16 +1778,16 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example2 tbody').on('click', '.view-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/get_news.php', // PHP script to fetch data from the server
+                    url: 'DataGet/get_promo.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { newsID: newsID },
+                    data: { promoID: promoID },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -1800,9 +1797,9 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example2 tbody').on('click', '.edit-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
 
             });
         });
@@ -1869,16 +1866,16 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example3 tbody').on('click', '.view-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/get_news.php', // PHP script to fetch data from the server
+                    url: 'DataGet/get_promo.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { newsID: newsID },
+                    data: { promoID: promoID },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -1888,9 +1885,9 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example3 tbody').on('click', '.edit-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
 
             });
         });
@@ -1956,16 +1953,16 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example4 tbody').on('click', '.view-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
                 $.ajax({
-                    url: 'DataGet/get_news.php', // PHP script to fetch data from the server
+                    url: 'DataGet/get_promo.php', // PHP script to fetch data from the server
                     method: 'POST',
-                    data: { newsID: newsID },
+                    data: { promoID: promoID },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -1975,9 +1972,9 @@ if ($_SESSION['UserRoleName'] != '0') {
 
             $('#example4 tbody').on('click', '.edit-btn', function () {
                 // Your edit button logic here
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 // Example action, replace with your logic
-                // console.log('Edit button clicked for category ID:', newsID);
+                // console.log('Edit button clicked for category ID:', promoID);
 
             });
         });
@@ -2152,7 +2149,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                     data: { eventid: eventid },
                     success: function (response) {
                         // Insert the HTML into the modal body
-                        $('#newsBody').html(response);
+                        $('#promoBody').html(response);
                     },
                     error: function (xhr, status, error) {
                         console.error(xhr.responseText);
@@ -2168,7 +2165,7 @@ if ($_SESSION['UserRoleName'] != '0') {
             // Use event delegation to handle clicks on any delete button
             $(document).on('click', '#deleteBtn', function (e) {
                 // Get the event ID from the button's data attribute
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('news-id');
 
                 // Show confirmation dialog
                 Swal.fire({
@@ -2222,7 +2219,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                                         return $.ajax({
                                             type: 'POST',
                                             url: 'DataDelete/delete_news.php',
-                                            data: { 'newsID': newsID, 'message': message },
+                                            data: { 'promoID': promoID, 'message': message },
                                             dataType: 'json'
                                         });
                                     }
@@ -2263,7 +2260,7 @@ if ($_SESSION['UserRoleName'] != '0') {
     <script>
         $(document).ready(function () {
             $(document).on('click', '#editBtn', function (e) {
-                var newsID = $(this).data('news-id');
+                var promoID = $(this).data('promo-id');
                 var author = $(this).data('author');
                 var decision = $(this).data('decision');
 

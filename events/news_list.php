@@ -999,7 +999,7 @@ if ($_SESSION['UserRoleName'] != '0') {
                                     <tr>
                                         <!-- <th>Serial No.</th> -->
                                         <th>News Title</th>
-                                        <th>Front Image</th>
+                                        <th>News Image</th>
                                         <th>Status</th>
                                         <th>Author</th>
                                         <th>Decision Status</th>
